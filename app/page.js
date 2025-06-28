@@ -2,7 +2,7 @@
 
 import TopBar from './components/TopBar';
 import SideBarHome from './components/SideBarHome';
-import MapWrapper from './components/MapWrapper';
+import MapWrapper from './components/Map/MapWrapper';
 import PopupLogin from './components/PopupLogin';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';

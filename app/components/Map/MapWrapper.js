@@ -1,14 +1,7 @@
 'use client'
 
-import dynamic from "next/dynamic";
+import { MapView,UserLocation } from "./MapLoader";
 import { useState } from "react";
-
-const MapView = dynamic(() => import("./Mapview"), {
-  ssr: false,
-  loading: () => <div className="text-center p-4">Loading map...</div>
-});
-const UserLocation=dynamic(() => import("../components/UserLocation"),
-{ ssr: false});
 
 const MapWrapper = () => {
   const[userPosition, setUserPosition] = useState(null);
