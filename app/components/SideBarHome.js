@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AboutIcon, EditMap, LeftArrowIcon, NavigationIcon, SearchIcon, UpArrowIcon } from "./Icons";
 
-export default function SideBarHome({ onEditMapClick }) {
+export default function SideBarHome({ onEditMapClick, onLocationSearch }) {
     const rawData = [];
     const [showSearchOptions, setShowSearchOptions] = useState(false);
     const [showNavOptions, setShowNavOptions] = useState(false);
@@ -11,69 +11,75 @@ export default function SideBarHome({ onEditMapClick }) {
     const searchOptions = ["Panchayat", "General"];
     const [districts, setDistricts] = useState([]);
     const [taluks, setTaluks] = useState([]);
-    const [taluksByDistrict, setTaluksByDistrict] = useState({});
-    const [villagesByTaluk, setVillagesByTaluk] = useState({});
     const [villages, setVillages] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [selectedTaluk, setSelectedTaluk] = useState('');
     const [selectedVillage, setSelectedVillage] = useState('');
 
     useEffect(() => {
-        fetch('/kerala_districts_taluks_villages.json')
-            .then(res => res.json())
+        fetch('/api/dist_name')
+            .then(data => data.json())
             .then(data => {
-                const districtSet = new Set();
-                const talukMap = {};
-                const villageMap = {};
-
-                let rawData = data["data"];
-                rawData.forEach((row, index) => {
-                    const district = row[2];
-                    const taluk = row[4];
-                    const village = row[6];
-
-                    if (index != 0) {
-                        districtSet.add(district);
-                        if (!talukMap[district]) {
-                            talukMap[district] = new Set();
-                        }
-                        talukMap[district].add(taluk);
-                        if(!villageMap[district]){
-                            villageMap[district] = new Set();
-                        }
-                        if (!villageMap[district][taluk]) {
-                            villageMap[district][taluk] = new Set();
-                        }
-                        villageMap[district][taluk].add(village);
-                    }
-                });
-                const finalTalukMap = {};
-                const finalVillageMap = {};
-                for (const [district, districtValue] of Object.entries(talukMap)) {
-                    finalTalukMap[district] = Array.from(districtValue);
-                    finalVillageMap[district] = {};
-                    for (const [taluk, talukValue] of Object.entries(villageMap[district])) {
-                        finalVillageMap[district][taluk] = Array.from(talukValue);
-                    }
-                }
-                setDistricts(Array.from(districtSet));
-                setTaluksByDistrict(finalTalukMap);
-                setVillagesByTaluk(finalVillageMap);
-            });
+                const districts = data.map(item => item.district);
+                setDistricts(districts);
+            })
+            .catch(err => console.log("Error fetching data: ", err))
     }, []);
 
     const handleDistrictClick = (e) => {
-        const selected = e.target.value;
-        setSelectedDistrict(selected);
-        console.log(selected);
-        setTaluks(taluksByDistrict[selected] || []);
+        setTaluks([]);
+        setVillages([]);
+        setSelectedTaluk("");
+        setSelectedVillage("");
+        if (e.target.value == "Select District") {
+            setSelectedDistrict("");
+            return;
+        }
+        setSelectedDistrict(e.target.value);
+        fetch(`/api/subdist_name?district=${e.target.value}`)
+            .then(data => data.json())
+            .then(data => {
+                const taluks = data.map(item => item.sub_dist);
+                setTaluks(taluks);
+            })
+            .catch(err => {
+                console.error('Error fetching data:', err.message);
+            });
     }
 
     const handleTalukClick = (e) => {
-        const selected = e.target.value;
-        setSelectedTaluk(selected);
-        console.log(selected);
-        setVillages(villagesByTaluk[selectedDistrict][selected] || []);
+        setVillages([]);
+        setSelectedVillage("");
+        if (e.target.value == "Select Taluk") {
+            setSelectedTaluk("");
+            return;
+        }
+        setSelectedTaluk(e.target.value);
+        fetch(`/api/village_name?district=${selectedDistrict}&sub_dist=${e.target.value}`)
+            .then(data => data.json())
+            .then(data => {
+                const villages = data.map(item => item.name);
+                setVillages(villages);
+            })
+            .catch(err => {
+                console.error('Error fetching data:', err.message);
+            });
+    }
+
+    const handleVillageClick = (e) => {
+        if (e.target.value == "Select Village") {
+            setSelectedVillage("");
+            return;
+        }
+        setSelectedVillage(e.target.value);
+    }
+
+    function onLocSearch() {
+        if(selectedDistrict && selectedTaluk && selectedVillage){
+            onLocationSearch(selectedDistrict, selectedTaluk, selectedVillage);
+        } else {
+            console.error("Error");
+        }
     }
 
 
@@ -134,26 +140,26 @@ export default function SideBarHome({ onEditMapClick }) {
                         {(searchBy == "Panchayat") && (
                             <div className="flex flex-col">
                                 <select onChange={handleDistrictClick} className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
-                                    <option value={"Select an option"}>Select an option</option>
+                                    <option value={"Select District"}>Select District</option>
                                     {districts.map((option, index) => {
                                         return <option key={index} value={option}>{option}</option>
                                     })}
                                 </select>
                                 <select onChange={handleTalukClick} className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
-                                    <option value={"Select an option"}>Select an option</option>
+                                    <option value={"Select Taluk"}>Select Taluk</option>
                                     {taluks.map((option, index) => {
                                         return <option key={index} value={option}>{option}</option>
                                     })}
                                 </select>
-                                <select className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
-                                    <option value={"Select an option"}>Select an option</option>
+                                <select onChange={handleVillageClick} className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
+                                    <option value={"Select Village"}>Select Village</option>
                                     {villages.map((option, index) => {
                                         return <option key={index} value={option}>{option}</option>
                                     })}
                                 </select>
                             </div>
                         )}
-                        <button className="mt-2 py-2 px-4 bg-[#1E2E33] rounded-xl text-white text-sm">Search</button>
+                        <button onClick={onLocSearch} className="mt-2 py-2 px-4 bg-[#1E2E33] rounded-xl text-white text-sm">Search</button>
                     </div>
                 )}
             </div>
