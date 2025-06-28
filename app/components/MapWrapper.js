@@ -14,7 +14,7 @@ const MapWrapper = () => {
   const[userPosition, setUserPosition] = useState(null);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-full">
       <UserLocation setUserPosition={setUserPosition} />
       <MapView userPosition={userPosition} />
     </div>

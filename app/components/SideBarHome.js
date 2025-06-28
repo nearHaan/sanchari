@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { AboutIcon, EditMap, LeftArrowIcon, NavigationIcon, SearchIcon, UpArrowIcon } from "./Icons";
 
 export default function SideBarHome({ onEditMapClick }) {
+    const rawData = [];
     const [showSearchOptions, setShowSearchOptions] = useState(false);
     const [showNavOptions, setShowNavOptions] = useState(false);
     const [searchBy, setSearchBy] = useState("Panchayat");
     const searchOptions = ["Panchayat", "General"];
     const [districts, setDistricts] = useState([]);
     const [taluks, setTaluks] = useState([]);
+    const [taluksByDistrict, setTaluksByDistrict] = useState({});
+    const [villagesByTaluk, setVillagesByTaluk] = useState({});
     const [villages, setVillages] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState('');
     const [selectedTaluk, setSelectedTaluk] = useState('');
@@ -19,9 +22,59 @@ export default function SideBarHome({ onEditMapClick }) {
         fetch('/kerala_districts_taluks_villages.json')
             .then(res => res.json())
             .then(data => {
-                setDistricts(Object.keys(data));
+                const districtSet = new Set();
+                const talukMap = {};
+                const villageMap = {};
+
+                let rawData = data["data"];
+                rawData.forEach((row, index) => {
+                    const district = row[2];
+                    const taluk = row[4];
+                    const village = row[6];
+
+                    if (index != 0) {
+                        districtSet.add(district);
+                        if (!talukMap[district]) {
+                            talukMap[district] = new Set();
+                        }
+                        talukMap[district].add(taluk);
+                        if(!villageMap[district]){
+                            villageMap[district] = new Set();
+                        }
+                        if (!villageMap[district][taluk]) {
+                            villageMap[district][taluk] = new Set();
+                        }
+                        villageMap[district][taluk].add(village);
+                    }
+                });
+                const finalTalukMap = {};
+                const finalVillageMap = {};
+                for (const [district, districtValue] of Object.entries(talukMap)) {
+                    finalTalukMap[district] = Array.from(districtValue);
+                    finalVillageMap[district] = {};
+                    for (const [taluk, talukValue] of Object.entries(villageMap[district])) {
+                        finalVillageMap[district][taluk] = Array.from(talukValue);
+                    }
+                }
+                setDistricts(Array.from(districtSet));
+                setTaluksByDistrict(finalTalukMap);
+                setVillagesByTaluk(finalVillageMap);
             });
     }, []);
+
+    const handleDistrictClick = (e) => {
+        const selected = e.target.value;
+        setSelectedDistrict(selected);
+        console.log(selected);
+        setTaluks(taluksByDistrict[selected] || []);
+    }
+
+    const handleTalukClick = (e) => {
+        const selected = e.target.value;
+        setSelectedTaluk(selected);
+        console.log(selected);
+        setVillages(villagesByTaluk[selectedDistrict][selected] || []);
+    }
 
 
     function onSearchByChange() {
@@ -80,17 +133,20 @@ export default function SideBarHome({ onEditMapClick }) {
                         )}
                         {(searchBy == "Panchayat") && (
                             <div className="flex flex-col">
-                                <select className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
+                                <select onChange={handleDistrictClick} className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
+                                    <option value={"Select an option"}>Select an option</option>
                                     {districts.map((option, index) => {
-                                        return <option key={index} value={option}>{option.data.keys}</option>
+                                        return <option key={index} value={option}>{option}</option>
                                     })}
                                 </select>
-                                <select className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
+                                <select onChange={handleTalukClick} className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
+                                    <option value={"Select an option"}>Select an option</option>
                                     {taluks.map((option, index) => {
                                         return <option key={index} value={option}>{option}</option>
                                     })}
                                 </select>
                                 <select className="mt-2 p-2 w-full border-1 border-[#7B7B7B] rounded-lg">
+                                    <option value={"Select an option"}>Select an option</option>
                                     {villages.map((option, index) => {
                                         return <option key={index} value={option}>{option}</option>
                                     })}
