@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
-import { getSession } from "./lib/auth";
+import { jwtVerify } from "jose";
 
-export function middleware(request) {
-  const session = request.cookies.get("session_user");
+export async function middleware(request) {
+  const token = request.cookies.get("token")?.value;
 
-  if (!session && request.nextUrl.pathname === "/edit_map") {
+  if (!token) {
     const redirectURL = new URL("/", request.url);
-    redirectURL.searchParams.set("unauthorized", true);
+    redirectURL.searchParams.set("unauthorized", "true");
     return NextResponse.redirect(redirectURL);
   }
 
-  return NextResponse.next();
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    await jwtVerify(token, secret);
+    return NextResponse.next();
+  } catch (err) {
+    console.error("JWT verification failed:", err.message);
+    const redirectURL = new URL("/", request.url);
+    redirectURL.searchParams.set("unauthorized", "true");
+    return NextResponse.redirect(redirectURL);
+  }
 }
 
 export const config = {

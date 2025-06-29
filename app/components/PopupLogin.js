@@ -7,6 +7,7 @@ export default function PopupLogin({ onClose, onLogin }) {
     const router = useRouter();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState("");
     const districts = ["Select", "Thiruvananthapuram", "Kollam", "Pathanamthitta", "Alappuzha", "Kottayam", "Idukki", "Ernakulam", "Thrissur", "Palakkad", "Malappuram", "Kozhikode", "Wayanad", "Kannur", "Kasaragod"];
     const taluks = ["Select", "Thiruvananthapuram", "Nedumangadu", "Chirayinkeezhu", "Kattakada", "Neyyattinkara", "Varkala"];
     const villages = ["Select", "Andoorkonam", "Attipra", "Cheruvakkal", "Iroopara(Ayiroopara)", "Kadakampally", "Kadinamkulam", "Kalliyoor", "Kazhakoottam", "Keezhthonnakkal", "Kudappanakunnu"];
@@ -75,6 +76,7 @@ export default function PopupLogin({ onClose, onLogin }) {
                             <label>Login</label>
                         </button>
                     </div>
+                    {error && <p className="text-red-500">{error}</p>}
                 </form>
             </div>
         </div>
