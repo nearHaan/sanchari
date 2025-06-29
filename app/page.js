@@ -4,25 +4,30 @@ import TopBar from './components/TopBar';
 import SideBarHome from './components/SideBarHome';
 import MapWrapper from './components/MapWrapper';
 import PopupLogin from './components/PopupLogin';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
   const [showLogIn, setShowLogIn] = useState(false);
   const [geojson, setGeojson] = useState(null);
+  const searchParams = useSearchParams();
+  const unauthorized = searchParams.get("unauthorized");
+
+  useEffect(() => {
+    if (unauthorized) {
+      setShowLogIn(true);
+      router.replace("/", { scroll: false });
+    }
+  }, [unauthorized]);
 
   const handlePopup = () => {
     setShowLogIn(!showLogIn);
   };
 
-  const handleLogin = () => {
-    router.push('/edit_map');
-  };
-
   const onGeoJsonSearch = (district, taluk, village) => {
     if (!district || !taluk || !village) return;
-    fetch(`/api/village_geojson?district=${district}&sub_dist=${taluk}&name=${village}`)
+    fetch(`/api/geojson/village?district=${district}&sub_dist=${taluk}&name=${village}`)
       .then(res => {
         if (!res.ok) throw new Error("GeoJSON fetch failed");
         return res.json();
@@ -43,7 +48,7 @@ export default function Home() {
             <MapWrapper geojson={geojson} />
           </div>
         </div>
-        {showLogIn && <PopupLogin onClose={handlePopup} onLogin={handleLogin} />}
+        {showLogIn && <PopupLogin onClose={handlePopup}/>}
       </div>
     </main>
   );

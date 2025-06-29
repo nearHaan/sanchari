@@ -17,7 +17,7 @@ export default function SideBarHome({ onEditMapClick, onLocationSearch }) {
     const [selectedVillage, setSelectedVillage] = useState('');
 
     useEffect(() => {
-        fetch('/api/dist_name')
+        fetch('/api/load-values/dist_name')
             .then(data => data.json())
             .then(data => {
                 const districts = data.map(item => item.district);
@@ -36,7 +36,7 @@ export default function SideBarHome({ onEditMapClick, onLocationSearch }) {
             return;
         }
         setSelectedDistrict(e.target.value);
-        fetch(`/api/subdist_name?district=${e.target.value}`)
+        fetch(`/api/load-values/subdist_name?district=${e.target.value}`)
             .then(data => data.json())
             .then(data => {
                 const taluks = data.map(item => item.sub_dist);
@@ -55,7 +55,7 @@ export default function SideBarHome({ onEditMapClick, onLocationSearch }) {
             return;
         }
         setSelectedTaluk(e.target.value);
-        fetch(`/api/village_name?district=${selectedDistrict}&sub_dist=${e.target.value}`)
+        fetch(`/api/load-values/village_name?district=${selectedDistrict}&sub_dist=${e.target.value}`)
             .then(data => data.json())
             .then(data => {
                 const villages = data.map(item => item.name);

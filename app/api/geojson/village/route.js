@@ -1,10 +1,14 @@
 import pool from '@/lib/db';
+import { NextResponse } from 'next/server';
 
-export default async function handler(req, res) {
-  const { district, sub_dist, name } = req.query;
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const district = searchParams.get('district');
+  const sub_dist = searchParams.get('sub_dist');
+  const name = searchParams.get('name');
 
   if (!district || !sub_dist || !name) {
-    return res.status(400).json({ error: 'Missing query parameters' });
+    return NextResponse.json({error: 'Missing query parameters'}, {status: 400});
   }
 
   try {
@@ -29,12 +33,12 @@ export default async function handler(req, res) {
     );
 
     if (!result.rows[0].geojson) {
-      return res.status(404).json({ error: 'Feature not found' });
+      return NextResponse.json({error: 'Feature not found'}, {status: 404});
     }
 
-    res.status(200).json(result.rows[0].geojson);
+    return NextResponse.json(result.rows[0].geojson);
   } catch (err) {
     console.error('Error fetching GeoJSON:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    return NextResponse.json({error: 'Internal Server Error'}, {status: 500});
   }
 }

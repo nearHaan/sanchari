@@ -1,11 +1,12 @@
+import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 
-export default async function handler(req, res) {
+export async function GET() {
   try {
     const result = await pool.query('SELECT DISTINCT district FROM kerala_districts ORDER BY district;');
-    res.status(200).json(result.rows);
+    return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Error fetching districts:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
