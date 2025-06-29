@@ -66,6 +66,7 @@ export default function PopupLogin({ onClose, onLogin }) {
                                 className="mt-2 p-2 w-48 border-1 border-[#7B7B7B] text-black placeholder-[#7B7B7B] rounded-lg"
                                 placeholder="Password"
                             />
+                            {error && <p className="test-xs text-red-500">{error}</p>}
                         </div>
                     </div>
                     <div className="flex w-full items-center justify-center gap-3 pt-3">
@@ -76,7 +77,6 @@ export default function PopupLogin({ onClose, onLogin }) {
                             <label>Login</label>
                         </button>
                     </div>
-                    {error && <p className="text-red-500">{error}</p>}
                 </form>
             </div>
         </div>
