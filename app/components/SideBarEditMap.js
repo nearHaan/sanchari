@@ -10,8 +10,9 @@ export default function SideBarEditMap() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("map");
 
-    function onTabClick(tab) {
+    async function onTabClick(tab) {
         if (tab == "exit") {
+            await fetch('/api/logout', { method: 'POST' });
             router.back();
         }
         setActiveTab(tab);
