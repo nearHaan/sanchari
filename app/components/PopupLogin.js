@@ -61,7 +61,7 @@ export default function PopupLogin({ onClose, onLogin }) {
         <div className="absolute z-10 h-screen w-screen flex items-center justify-center bg-[#00000030]">
             <div className="flex flex-col items-center justify-center h-fit w-fit bg-white rounded-lg p-4">
                 <form onSubmit={handleLogin}>
-                    <div className="flex justify-center">
+                    <div className="flex flex-col sm:flex-row justify-center">
                         <div className="flex flex-col mr-4 text-black">
                             <label className="text-black text-base mb-2">Select an area of interest</label>
                             <select
@@ -96,8 +96,8 @@ export default function PopupLogin({ onClose, onLogin }) {
                             </select>
                             {areaError && <p className="mt-2 text-xs text-red-500">{areaError}</p>}
                         </div>
-                        <div className="w-[1px] bg-[#E5E8EB]" />
-                        <div className="flex flex-col ml-4">
+                        <div className="max-sm:mt-3 w-[1px] bg-[#E5E8EB]" />
+                        <div className="flex flex-col sm:ml-4">
                             <label className="text-black text-base mb-2">Enter Log In Credentials</label>
                             <input
                                 value={username}
