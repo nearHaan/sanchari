@@ -24,27 +24,23 @@ const GeoJSONViewer = ({ geojson }) => {
   useEffect(() => {
   if (!geojson) return;
 
-  // Remove previous layer
   if (layerRef.current) {
     map.removeLayer(layerRef.current);
   }
 
   const layer = L.geoJSON(geojson, {
     style: {
-      color: "#ff7800",
       weight: 2,
       opacity: 1,
-      fillOpacity: 0.2,
+      fillOpacity: 0,
     },
   });
 
   layer.addTo(map);
-
-  // Smooth fly animation to the GeoJSON bounds
   const bounds = layer.getBounds();
   if (bounds.isValid()) {
     map.flyToBounds(bounds, {
-      duration: 1.5, // duration in seconds
+      duration: 1.5,
       easeLinearity: 0.25,
     });
   }
