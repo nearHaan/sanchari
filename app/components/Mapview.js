@@ -22,31 +22,41 @@ const GeoJSONViewer = ({ geojson }) => {
   const layerRef = useRef(null);
 
   useEffect(() => {
-  if (!geojson) return;
+    if (!geojson) return;
 
-  if (layerRef.current) {
-    map.removeLayer(layerRef.current);
-  }
+    if (layerRef.current) {
+      map.removeLayer(layerRef.current);
+    }
 
-  const layer = L.geoJSON(geojson, {
-    style: {
-      weight: 2,
-      opacity: 1,
-      fillOpacity: 0,
-    },
-  });
-
-  layer.addTo(map);
-  const bounds = layer.getBounds();
-  if (bounds.isValid()) {
-    map.flyToBounds(bounds, {
-      duration: 1.5,
-      easeLinearity: 0.25,
+    const layer = L.geoJSON(geojson, {
+      style: feature => {
+        if (feature.geometry.type === 'Polygon') {
+          return {
+            color: 'blue',
+            weight: 2,
+            dashArray: '4',
+            fillOpacity: 0.1,
+          };
+        } else {
+          return {
+            color: 'red',
+            weight: 3,
+          };
+        }
+      },
     });
-  }
 
-  layerRef.current = layer;
-}, [geojson, map]);
+    layer.addTo(map);
+    const bounds = layer.getBounds();
+    if (bounds.isValid()) {
+      map.flyToBounds(bounds, {
+        duration: 1.5,
+        easeLinearity: 0.25,
+      });
+    }
+
+    layerRef.current = layer;
+  }, [geojson, map]);
 
   return null;
 };
@@ -54,6 +64,14 @@ const GeoJSONViewer = ({ geojson }) => {
 export default function MapView({ userPosition, geojson }) {
   const defaultPosition = [10.8505, 76.2711];
   const mapRef = useRef(null);
+
+  delete L.Icon.Default.prototype._getIconUrl;
+
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+    iconUrl: "/leaflet/marker-icon.png",
+    shadowUrl: "/leaflet/marker-shadow.png",
+  });
 
   return (
     <div className="flex-1">
@@ -66,9 +84,9 @@ export default function MapView({ userPosition, geojson }) {
         }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
-        />
+            url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+            attribution="© OpenStreetMap contributors"
+          />
 
         <MapUpdater userPosition={userPosition} />
 
