@@ -10,12 +10,12 @@ const MapView = dynamic(() => import("./Mapview"), {
 const UserLocation=dynamic(() => import("../components/UserLocation"),
 { ssr: false});
 
-export default function MapWrapper({ geojson }) {
+export default function MapWrapper({ geojson, page }) {
   const[userPosition, setUserPosition] = useState(null);
 
   return (
     <div className="flex h-full">
-      <UserLocation setUserPosition={setUserPosition} />
+      {(page == "home") && <UserLocation setUserPosition={setUserPosition} />}
       <MapView userPosition={userPosition} geojson={geojson}/>
     </div>
   );

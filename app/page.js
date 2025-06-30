@@ -45,7 +45,7 @@ export default function Home() {
         <div className="relative flex h-screen">
           <SideBarHome onEditMapClick={handlePopup} onLocationSearch={onGeoJsonSearch} />
           <div className="absolute z-0 inset-0 flex-1 bg-blue-100">
-            <MapWrapper geojson={geojson} />
+            <MapWrapper geojson={geojson} page={"home"}/>
           </div>
         </div>
         {showLogIn && <PopupLogin onClose={handlePopup}/>}
