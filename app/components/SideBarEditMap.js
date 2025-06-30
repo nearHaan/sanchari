@@ -46,7 +46,7 @@ export default function SideBarEditMap() {
     ];
 
     return (
-        <div className="flex absolute z-10 top-0 bottom-0 left-0 w-90 bg-white rounded-r-2xl">
+        <div className="flex absolute z-30 top-0 bottom-0 left-0 w-90 bg-white rounded-r-2xl">
             <div className="flex flex-col bg-[#F0F2F5] w-auto">
                 <button onClick={() => { onTabClick("map") }} className={`m-2 p-2 hover:bg-white rounded-2xl ${activeTab == "map" ? "bg-white" : ""}`}>
                     < MapIcon />
