@@ -1,73 +1,82 @@
-import pool from '@/lib/db';
-import { NextResponse } from 'next/server';
+// File: app/api/geojson/village-with-roads/route.js
+import pool from "@/lib/db";
+import { NextResponse } from "next/server";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const district = searchParams.get('district');
-  const sub_dist = searchParams.get('sub_dist');
-  const name = searchParams.get('name');
+  const district = searchParams.get("district");
+  const sub_dist = searchParams.get("sub_dist");
+  const name = searchParams.get("name");
 
   if (!district || !sub_dist || !name) {
-    return NextResponse.json({ error: 'Missing query parameters' }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing district, sub_dist, or name in query." },
+      { status: 400 }
+    );
   }
 
-  const client = await pool.connect();
-
   try {
-    const villageResult = await client.query(
-      `SELECT geom
-       FROM kerala_districts
-       WHERE name = $1 AND sub_dist = $2 AND district = $3
-       LIMIT 1`,
-      [name, sub_dist, district]
-    );
+    const villageQuery = `
+      SELECT name, district, sub_dist, ST_AsGeoJSON(ST_Force2D(geom))::json AS geometry
+      FROM kerala_districts
+      WHERE district = $1 AND sub_dist = $2 AND name = $3
+      LIMIT 1
+    `;
+    const villageRes = await pool.query(villageQuery, [district, sub_dist, name]);
 
-    if (villageResult.rowCount === 0) {
-      return NextResponse.json({ error: 'Village not found' }, { status: 404 });
+    if (villageRes.rows.length === 0) {
+      return NextResponse.json({ error: "Village not found." }, { status: 404 });
     }
 
-    const villageGeom = villageResult.rows[0].geom;
+    const villageFeature = {
+      type: "Feature",
+      properties: {
+        name: villageRes.rows[0].name,
+        district: villageRes.rows[0].district,
+        sub_dist: villageRes.rows[0].sub_dist,
+      },
+      geometry: villageRes.rows[0].geometry,
+    };
 
-    const villageGeojsonResult = await client.query(
-      `SELECT jsonb_build_object(
-         'type', 'Feature',
-         'geometry', ST_AsGeoJSON(geom)::jsonb,
-         'properties', jsonb_build_object(
-           'name', name,
-           'district', district,
-           'sub_dist', sub_dist
-         )
-       ) AS feature
-       FROM kerala_districts
-       WHERE name = $1 AND sub_dist = $2 AND district = $3`,
-      [name, sub_dist, district]
-    );
+    const roadsQuery = `
+      SELECT
+        id, roadid, roadname, surfacetyp, roadtype, width,
+        ST_AsGeoJSON(ST_Force2D(geom))::json AS geometry
+      FROM roads
+      WHERE ST_Intersects(geom, (
+        SELECT geom FROM kerala_districts
+        WHERE district = $1 AND sub_dist = $2 AND name = $3
+        LIMIT 1
+      ))
+    `;
 
-    const roadsResult = await client.query(
-      `SELECT jsonb_build_object(
-         'type', 'Feature',
-         'geometry', ST_AsGeoJSON(geom)::jsonb,
-         'properties', jsonb_build_object(
-           'roadname', roadname,
-           'district', district
-         )
-       ) AS feature
-       FROM roads
-       WHERE ST_Intersects(geom, $1)`,
-      [villageGeom]
-    );
+    const roadsRes = await pool.query(roadsQuery, [district, sub_dist, name]);
+
+    const roadFeatures = roadsRes.rows.map((row) => ({
+      type: "Feature",
+      properties: {
+        id: row.id,
+        roadid: row.roadid,
+        roadname: row.roadname,
+        surfacetyp: row.surfacetyp,
+        roadtype: row.roadtype,
+        width: row.width,
+      },
+      geometry: row.geometry,
+    }));
 
     return NextResponse.json({
-      type: 'FeatureCollection',
-      features: [
-        villageGeojsonResult.rows[0].feature,
-        ...roadsResult.rows.map(r => r.feature)
-      ]
+      roads: {
+        type: "FeatureCollection",
+        features: roadFeatures,
+      },
+      village: villageFeature,
     });
   } catch (err) {
-    console.error('Error:', err);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-  } finally {
-    client.release();
+    console.error("DB error:", err);
+    return NextResponse.json(
+      { error: "Failed to fetch village and roads." },
+      { status: 500 }
+    );
   }
 }
