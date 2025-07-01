@@ -2,28 +2,30 @@
 
 import TopBar from "../components/TopBar";
 import SideBarEditMap from "../components/SideBarEditMap";
-import MapWrapper from "../components/MapWrapper";
 import { useEffect, useState } from "react";
 import { AvatarIcon } from "../components/Icons";
 import { useSearchParams } from "next/navigation";
+import MapEditorWrapper from "../components/Map/MapEditorWrapper";
 
 export default function EditMapPageClient({ username }) {
     const searchParams = useSearchParams();
     const district = searchParams.get('district');
     const sub_dist = searchParams.get('sub_dist');
     const village = searchParams.get('village');
-    const [geojson, setGeojson] = useState(null);
+    const [roadGeojson, setRoadGeojson] = useState(null);
+    const [villageFeature, setVillageFeature] = useState(null);
 
     useEffect(() => {
-        fetch(`/api/geojson/village-with-roads?district=${district}&sub_dist=${sub_dist}&name=${village}`)
-            .then(res => {
-                if (!res.ok) throw new Error("GeoJSON fetch failed");
-                return res.json();
-            })
-            .then(data => {
-                setGeojson(data);
-            })
-            .catch(err => console.error('Error loading GeoJSON:', err));
+        const fetchData = async () => {
+            const res = await fetch(
+                `/api/geojson/village-with-roads?district=${district}&sub_dist=${sub_dist}&name=${village}`
+            );
+            const data = await res.json();
+            setRoadGeojson(data.roads);
+            setVillageFeature(data.village);
+        };
+
+        fetchData();
     }, []);
 
     return (
@@ -38,7 +40,9 @@ export default function EditMapPageClient({ username }) {
                             <label className="text-black">{username ?? "Guest"}</label>
                         </div>
                         <div className="absolute inset-0 z-10">
-                            <MapWrapper geojson={geojson} />
+                            <MapEditorWrapper villageFeature={villageFeature}
+                                roadGeojson={roadGeojson}
+                                setRoadGeojson={setRoadGeojson} />
                         </div>
                     </div>
                 </div>
