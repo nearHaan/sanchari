@@ -7,10 +7,10 @@ const MapView = dynamic(() => import("./Mapview"), {
   ssr: false,
   loading: () => <div className="text-center p-4">Loading map...</div>
 });
-const UserLocation=dynamic(() => import("../components/UserLocation"),
+const UserLocation=dynamic(() => import("./UserLocation"),
 { ssr: false});
 
-export default function MapWrapper({ geojson, page }) {
+export default function MapViewWrapper({ geojson, page }) {
   const[userPosition, setUserPosition] = useState(null);
 
   return (

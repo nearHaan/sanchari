@@ -30,7 +30,7 @@ const GeoJSONViewer = ({ geojson }) => {
 
     const layer = L.geoJSON(geojson, {
       style: feature => {
-        if (feature.geometry.type === 'Polygon') {
+        if (feature.geometry.type === 'MultiPolygon') {
           return {
             color: 'blue',
             weight: 2,
@@ -40,7 +40,8 @@ const GeoJSONViewer = ({ geojson }) => {
         } else {
           return {
             color: 'red',
-            weight: 3,
+            weight: 10,
+            opacity: 0.7
           };
         }
       },
