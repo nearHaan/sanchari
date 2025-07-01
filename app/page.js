@@ -2,10 +2,10 @@
 
 import TopBar from './components/TopBar';
 import SideBarHome from './components/SideBarHome';
-import MapWrapper from './components/MapWrapper';
 import PopupLogin from './components/PopupLogin';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import MapViewWrapper from './components/Map/MapViewWrapper';
 
 export default function Home() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function Home() {
         <div className="relative flex h-screen">
           <SideBarHome onEditMapClick={handlePopup} onLocationSearch={onGeoJsonSearch} />
           <div className="absolute z-0 inset-0 flex-1 bg-blue-100">
-            <MapWrapper geojson={geojson} page={"home"}/>
+            <MapViewWrapper geojson={geojson} page={"home"}/>
           </div>
         </div>
         {showLogIn && <PopupLogin onClose={handlePopup}/>}
