@@ -5,39 +5,44 @@ import SideBarEditMap from "../components/SideBarEditMap";
 import MapWrapper from "../components/MapWrapper";
 import { useEffect, useState } from "react";
 import { AvatarIcon } from "../components/Icons";
+import { useSearchParams } from "next/navigation";
 
 export default function EditMapPageClient({ username }) {
-  const [geojson, setGeojson] = useState(null);
+    const searchParams = useSearchParams();
+    const district = searchParams.get('district');
+    const sub_dist = searchParams.get('sub_dist');
+    const village = searchParams.get('village');
+    const [geojson, setGeojson] = useState(null);
 
-  useEffect(() => {
-    fetch(`/api/geojson/village-with-roads?district=${"Kollam"}&sub_dist=${"Kottarakkara"}&name=${"Melila"}`)
-      .then(res => {
-        if (!res.ok) throw new Error("GeoJSON fetch failed");
-        return res.json();
-      })
-      .then(data => {
-        setGeojson(data);
-      })
-      .catch(err => console.error('Error loading GeoJSON:', err));
-  }, []);
+    useEffect(() => {
+        fetch(`/api/geojson/village-with-roads?district=${district}&sub_dist=${sub_dist}&name=${village}`)
+            .then(res => {
+                if (!res.ok) throw new Error("GeoJSON fetch failed");
+                return res.json();
+            })
+            .then(data => {
+                setGeojson(data);
+            })
+            .catch(err => console.error('Error loading GeoJSON:', err));
+    }, []);
 
-  return (
-    <main>
-      <div className="flex flex-col h-screen w-screen bg-white">
-        <TopBar />
-        <div className="relative flex h-screen">
-          <SideBarEditMap />
-          <div className="relative z-0 inset-0 flex-1 bg-blue-100">
-            <div className="absolute z-20 top-2 right-2 flex items-center pl-1 pr-2 py-1 bg-white rounded-full text-black min-w-[150] shadow-md">
-                <div className="mr-1 bg-[#E5E8EB] rounded-full size-7 flex items-center justify-center"><AvatarIcon/></div>
-                <label className="text-black">{username ?? "Guest"}</label>
+    return (
+        <main>
+            <div className="flex flex-col h-screen w-screen bg-white">
+                <TopBar />
+                <div className="relative flex h-screen">
+                    <SideBarEditMap />
+                    <div className="relative z-0 inset-0 flex-1 bg-blue-100">
+                        <div className="absolute z-20 top-2 right-2 flex items-center pl-1 pr-2 py-1 bg-white rounded-full text-black min-w-[150] shadow-md">
+                            <div className="mr-1 bg-[#E5E8EB] rounded-full size-7 flex items-center justify-center"><AvatarIcon /></div>
+                            <label className="text-black">{username ?? "Guest"}</label>
+                        </div>
+                        <div className="absolute inset-0 z-10">
+                            <MapWrapper geojson={geojson} />
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div className="absolute inset-0 z-10">
-              <MapWrapper geojson={geojson} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+        </main>
+    );
 }

@@ -49,7 +49,7 @@ export default function PopupLogin({ onClose, onLogin }) {
                 }
                 return;
             }
-            router.push("/edit_map");
+            router.push(`/edit_map?district=${selectedDistrict}&sub_dist=${selectedTaluk}&village=${selectedVillage}`);
         } catch (err) {
             console.error("Login failed:", err);
             setError("Network error. Please check your internet connection.");
