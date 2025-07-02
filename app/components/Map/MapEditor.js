@@ -181,7 +181,7 @@ const GeoJSONEditor = ({
       setRoadGeojson(updatedGeojson);
     }
 
-    const layer = roadLayersRef.current.get(selectedFeature.id);
+    const layer = roadLayersRef.current.get(selectedFeature.roadid);
     if (layer) {
       const latlngs = updatedFeature.geometry.coordinates.map((line) =>
         line.map(([lng, lat]) => [lat, lng])
