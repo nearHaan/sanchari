@@ -85,13 +85,12 @@ const GeoJSONEditor = ({
                 : "red",
             weight: 6,
             opacity: 0.7,
-            dashArray: isLocked ? "4" : null,
           };
         },
         onEachFeature: (feature, layer) => {
           if (feature.geometry.type !== "MultiLineString") return;
 
-          roadLayersRef.current.set(feature.properties.id, layer);
+          roadLayersRef.current.set(feature.properties.roadid, layer);
 
           layer.on("click", () => {
             const roadid = feature.properties.roadid;
