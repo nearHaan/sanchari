@@ -40,7 +40,7 @@ export default function EditMapPageClient({ username }) {
                             <label className="text-black">{username ?? "Guest"}</label>
                         </div>
                         <div className="absolute inset-0 z-10">
-                            <MapEditorWrapper villageFeature={villageFeature}
+                            <MapEditorWrapper username={username} villageFeature={villageFeature}
                                 roadGeojson={roadGeojson}
                                 setRoadGeojson={setRoadGeojson} />
                         </div>

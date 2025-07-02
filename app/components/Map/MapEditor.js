@@ -9,8 +9,11 @@ import {
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import { io } from "socket.io-client";
 
-// Custom node icon
+// WebSocket connection
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL); // 👈 Use public env var
+
 const createNodeIcon = () =>
   L.divIcon({
     className: "",
@@ -20,11 +23,14 @@ const createNodeIcon = () =>
   });
 
 const GeoJSONEditor = ({
+  user,
   villageFeature,
   roadGeojson,
   setRoadGeojson,
   selectedFeatureId,
   setSelectedFeatureId,
+  lockedRoads,
+  setLockedRoads,
 }) => {
   const map = useMap();
   const layerRef = useRef(null);
@@ -34,16 +40,15 @@ const GeoJSONEditor = ({
 
   useEffect(() => {
     const esc = (e) => {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && selectedFeatureId) {
+        socket.emit("road-unlock", { roadid: selectedFeatureId });
         setSelectedFeatureId(null);
         setNodes([]);
       }
     };
     document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("keydown", esc);
-    };
-  }, []);
+    return () => document.removeEventListener("keydown", esc);
+  }, [selectedFeatureId]);
 
   useEffect(() => {
     if (!villageFeature && !roadGeojson) return;
@@ -55,7 +60,6 @@ const GeoJSONEditor = ({
 
     const layerGroup = L.featureGroup();
 
-    // Add village polygon
     if (villageFeature) {
       L.geoJSON(villageFeature, {
         style: {
@@ -67,38 +71,61 @@ const GeoJSONEditor = ({
       }).addTo(layerGroup);
     }
 
-    // Add road lines
     if (roadGeojson) {
       L.geoJSON(roadGeojson, {
-        style: (feature) => ({
-          color:
-            selectedFeatureId === feature.properties.roadid ? "green" : "red",
-          weight: 6,
-          opacity: 0.7,
-        }),
+        style: (feature) => {
+          const roadid = feature.properties.roadid;
+          const isLocked = lockedRoads[roadid];
+          return {
+            color:
+              selectedFeatureId === roadid
+                ? "green"
+                : isLocked
+                ? "#aaa"
+                : "red",
+            weight: 6,
+            opacity: 0.7,
+            dashArray: isLocked ? "4" : null,
+          };
+        },
         onEachFeature: (feature, layer) => {
-          if (feature.geometry.type === "MultiLineString") {
-            roadLayersRef.current.set(feature.properties.id, layer);
+          if (feature.geometry.type !== "MultiLineString") return;
 
-            layer.on("click", () => {
-              setSelectedFeatureId(feature.properties.roadid);
+          roadLayersRef.current.set(feature.properties.id, layer);
 
-              const coords = [];
-              feature.geometry.coordinates.forEach((line, lineIdx) => {
-                line.forEach((point, pointIdx) => {
-                  if (!Array.isArray(point)) return;
-                  const [lng, lat] = point;
-                  coords.push({
-                    lat,
-                    lng,
-                    index: coords.length,
-                    lineIndex: lineIdx,
-                    pointIndex: pointIdx,
-                  });
+          layer.on("click", () => {
+            const roadid = feature.properties.roadid;
+            if (lockedRoads[roadid]) return;
+
+            if (selectedFeatureId && selectedFeatureId !== roadid) {
+              socket.emit("road-unlock", { roadid: selectedFeatureId });
+            }
+
+            setSelectedFeatureId(roadid);
+            socket.emit("road-lock", { roadid, username: user });
+
+            const coords = [];
+            feature.geometry.coordinates.forEach((line, lineIdx) => {
+              line.forEach((point, pointIdx) => {
+                const [lng, lat] = point;
+                coords.push({
+                  lat,
+                  lng,
+                  index: coords.length,
+                  lineIndex: lineIdx,
+                  pointIndex: pointIdx,
                 });
               });
+            });
 
-              setNodes(coords);
+            setNodes(coords);
+          });
+
+          const roadid = feature.properties.roadid;
+          if (lockedRoads[roadid]) {
+            layer.bindTooltip(`Being edited by ${lockedRoads[roadid]}`, {
+              permanent: false,
+              direction: "top",
             });
           }
 
@@ -117,7 +144,19 @@ const GeoJSONEditor = ({
         hasZoomed.current = true;
       }
     }
-  }, [villageFeature, roadGeojson, selectedFeatureId]);
+  }, [villageFeature, roadGeojson, selectedFeatureId, lockedRoads]);
+
+  useEffect(() => {
+    const handleUnload = () => {
+      if (selectedFeatureId) {
+        socket.emit("road-unlock", { roadid: selectedFeatureId });
+      }
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [selectedFeatureId]);
 
   const updateNode = (nodeIndex, newLatLng) => {
     const selectedFeature = roadGeojson?.features?.find(
@@ -128,7 +167,6 @@ const GeoJSONEditor = ({
     const node = nodes.find((n) => n.index === nodeIndex);
     if (!node) return;
 
-    // Clone safely
     const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
     updatedFeature.geometry.coordinates[node.lineIndex][node.pointIndex] = [
       newLatLng.lng,
@@ -144,7 +182,7 @@ const GeoJSONEditor = ({
       setRoadGeojson(updatedGeojson);
     }
 
-    const layer = roadLayersRef.current.get(selectedFeatureId);
+    const layer = roadLayersRef.current.get(selectedFeature.id);
     if (layer) {
       const latlngs = updatedFeature.geometry.coordinates.map((line) =>
         line.map(([lng, lat]) => [lat, lng])
@@ -159,6 +197,17 @@ const GeoJSONEditor = ({
           : n
       )
     );
+
+    socket.emit("road-edit", updatedFeature);
+
+    fetch("/api/geojson/update-road", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selectedFeatureId,
+        updatedGeoJSON: updatedFeature,
+      }),
+    });
   };
 
   return (
@@ -182,6 +231,7 @@ const GeoJSONEditor = ({
 };
 
 export default function MapEditor({
+  user,
   villageFeature,
   roadGeojson,
   setRoadGeojson,
@@ -189,6 +239,7 @@ export default function MapEditor({
   const defaultPosition = [10.8505, 76.2711];
   const mapRef = useRef(null);
   const [selectedFeatureId, setSelectedFeatureId] = useState(null);
+  const [lockedRoads, setLockedRoads] = useState({});
 
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
@@ -196,6 +247,42 @@ export default function MapEditor({
     iconUrl: "/leaflet/marker-icon.png",
     shadowUrl: "/leaflet/marker-shadow.png",
   });
+
+  useEffect(() => {
+    socket.emit("request-locks"); // 👈 Request locks after client connects
+
+    socket.on("road-updated", (data) => {
+      setRoadGeojson((prev) => {
+        const updatedFeatures = prev.features.map((f) =>
+          f.properties.roadid === data.properties.roadid ? data : f
+        );
+        return { ...prev, features: updatedFeatures };
+      });
+    });
+
+    socket.on("road-locked", ({ roadid, username }) => {
+      setLockedRoads((prev) => ({ ...prev, [roadid]: username }));
+    });
+
+    socket.on("road-unlocked", ({ roadid }) => {
+      setLockedRoads((prev) => {
+        const copy = { ...prev };
+        delete copy[roadid];
+        return copy;
+      });
+    });
+
+    socket.on("initial-locks", (locks) => {
+      setLockedRoads(locks);
+    });
+
+    return () => {
+      socket.off("road-updated");
+      socket.off("road-locked");
+      socket.off("road-unlocked");
+      socket.off("initial-locks");
+    };
+  }, [setRoadGeojson]);
 
   return (
     <div className="flex-1">
@@ -214,11 +301,14 @@ export default function MapEditor({
 
         {(villageFeature || roadGeojson) && (
           <GeoJSONEditor
+            user={user}
             villageFeature={villageFeature}
             roadGeojson={roadGeojson}
             setRoadGeojson={setRoadGeojson}
             selectedFeatureId={selectedFeatureId}
             setSelectedFeatureId={setSelectedFeatureId}
+            lockedRoads={lockedRoads}
+            setLockedRoads={setLockedRoads}
           />
         )}
       </MapContainer>
