@@ -1,8 +1,16 @@
 "use client";
 
-import { MapContainer, TileLayer, useMap, Marker, Popup } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  useMap,
+  Marker,
+  Popup,
+  WMSTileLayer,
+  useMapEvents,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 
 const MapUpdater = ({ userPosition }) => {
@@ -13,6 +21,20 @@ const MapUpdater = ({ userPosition }) => {
       map.flyTo(userPosition, 13);
     }
   }, [userPosition]);
+
+  return null;
+};
+
+const ZoomWatcher = ({ setZoom }) => {
+  const map = useMapEvents({
+    zoomend: () => {
+      setZoom(map.getZoom());
+    },
+  });
+
+  useEffect(() => {
+    setZoom(map.getZoom());
+  }, [map]);
 
   return null;
 };
@@ -29,19 +51,19 @@ const GeoJSONViewer = ({ geojson }) => {
     }
 
     const layer = L.geoJSON(geojson, {
-      style: feature => {
-        if (feature.geometry.type === 'MultiPolygon') {
+      style: (feature) => {
+        if (feature.geometry.type === "MultiPolygon") {
           return {
-            color: 'blue',
+            color: "blue",
             weight: 2,
-            dashArray: '4',
+            dashArray: "4",
             fillOpacity: 0.1,
           };
         } else {
           return {
-            color: 'red',
-            weight: 10,
-            opacity: 0.7
+            color: "red",
+            weight: 2,
+            opacity: 0.7,
           };
         }
       },
@@ -65,9 +87,9 @@ const GeoJSONViewer = ({ geojson }) => {
 export default function MapView({ userPosition, geojson }) {
   const defaultPosition = [10.8505, 76.2711];
   const mapRef = useRef(null);
+  const [zoom, setZoom] = useState(7);
 
   delete L.Icon.Default.prototype._getIconUrl;
-
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: "/leaflet/marker-icon-2x.png",
     iconUrl: "/leaflet/marker-icon.png",
@@ -85,9 +107,22 @@ export default function MapView({ userPosition, geojson }) {
         }}
       >
         <TileLayer
-            url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
-            attribution="© OpenStreetMap contributors"
+          url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+          attribution="© OpenStreetMap contributors"
+        />
+
+        {zoom >= 10 && (
+          <WMSTileLayer
+            url="http://localhost:8080/geoserver/sanchari/wms"
+            layers="sanchari:roads"
+            format="image/png"
+            transparent={true}
+            version="1.1.0"
+            attribution="© GeoServer"
           />
+        )}
+
+        <ZoomWatcher setZoom={setZoom} />
 
         <MapUpdater userPosition={userPosition} />
 
