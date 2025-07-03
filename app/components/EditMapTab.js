@@ -1,7 +1,38 @@
 import { AddNodeIcon, AttributeIcon, CancelIcon, DeleteNodeIcon, DetectIcon, ExitIcon, HandDrawIcon, LogIcon, MapIcon, MergeNodeIcon, MoveNodeIcon, PolygonIcon, RedoIcon, RemoveIcon, SaveIcon, SelectIcon, SettingsIcon, ShootIcon, SpanIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./Icons";
 import EditMapBtn from "./EditMapBtn";
 
-export default function EditMapTab() {
+export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
+
+    async function saveUpdatedRoad(roadId, updatedGeoJSON, username, reason) {
+        const response = await fetch("/api/geojson/update-road", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                id: roadId,
+                updatedGeoJSON,
+                edited_by: username,
+                edit_reason: reason,
+            }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to save update");
+        }
+
+        return await response.json(); // { success: true }
+    }
+
+    const onSave = async () => {
+        await saveUpdatedRoad(
+            roadId,
+            updatedGeoJSON,
+            username,
+            "Changed Road"
+        );
+    }
     return (
         <div className="flex-1 flex flex-col h-full overflow-y-auto">
             <div className="p-2">
@@ -115,7 +146,7 @@ export default function EditMapTab() {
                     < CancelIcon />
                     <label className="ml-2 mr-auto cursor-pointer">Cancel</label>
                 </button>
-                <button className="p-2 flex w-full text-white bg-[#1E2E33] rounded-lg cursor-pointer">
+                <button onClick={onSave} className="p-2 flex w-full text-white bg-[#1E2E33] rounded-lg cursor-pointer">
                     < SaveIcon />
                     <label className="ml-2 mr-auto cursor-pointer">Save</label>
                 </button>

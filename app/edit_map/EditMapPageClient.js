@@ -14,6 +14,7 @@ export default function EditMapPageClient({ username }) {
     const village = searchParams.get('village');
     const [ selectedRoadId, setSelectedRoadId] = useState('');
     const [roadGeojson, setRoadGeojson] = useState(null);
+    const [updatedGeojson, setUpdatedGeojson] = useState(null);
     const [villageFeature, setVillageFeature] = useState(null);
 
     useEffect(() => {
@@ -34,14 +35,14 @@ export default function EditMapPageClient({ username }) {
             <div className="flex flex-col h-screen w-screen bg-white">
                 <TopBar />
                 <div className="relative flex h-screen">
-                    <SideBarEditMap selectedRoadId={selectedRoadId}/>
+                    <SideBarEditMap selectedRoadId={selectedRoadId} updatedGeoJSON={updatedGeojson} username={username}/>
                     <div className="relative z-0 inset-0 flex-1 bg-blue-100">
                         <div className="absolute z-20 top-2 right-2 flex items-center pl-1 pr-2 py-1 bg-white rounded-full text-black min-w-[150] shadow-md">
                             <div className="mr-1 bg-[#E5E8EB] rounded-full size-7 flex items-center justify-center"><AvatarIcon /></div>
                             <label className="text-black">{username ?? "Guest"}</label>
                         </div>
                         <div className="absolute inset-0 z-10">
-                            <MapEditorWrapper username={username} setSelectedRoadId={setSelectedRoadId} villageFeature={villageFeature}
+                            <MapEditorWrapper username={username} setSelectedRoadId={setSelectedRoadId} setUpdatedGeojson={setUpdatedGeojson} villageFeature={villageFeature}
                                 roadGeojson={roadGeojson}
                                 setRoadGeojson={setRoadGeojson} />
                         </div>
