@@ -111,13 +111,13 @@ export default function EditMapTab() {
                 </button>
             </div>
             <div className="sticky bottom-0 mt-auto h-fit p-3 flex items-center justify-center bg-white shadow-[0_0_30px_0_rgba(0,0,0,0.1)] rounded-t-2xl">
-                <button className=" mr-2 p-2 flex w-full text-black bg-[#E5E8EB] rounded-lg">
+                <button className="mr-2 p-2 flex w-full text-black bg-[#E5E8EB] rounded-lg cursor-pointer">
                     < CancelIcon />
-                    <label className="ml-2 mr-auto">Cancel</label>
+                    <label className="ml-2 mr-auto cursor-pointer">Cancel</label>
                 </button>
-                <button className="p-2 flex w-full text-white bg-[#1E2E33] rounded-lg">
+                <button className="p-2 flex w-full text-white bg-[#1E2E33] rounded-lg cursor-pointer">
                     < SaveIcon />
-                    <label className="ml-2 mr-auto">Save</label>
+                    <label className="ml-2 mr-auto cursor-pointer">Save</label>
                 </button>
             </div>
         </div>
