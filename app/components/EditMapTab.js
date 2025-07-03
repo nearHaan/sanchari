@@ -1,9 +1,9 @@
-import { AddNodeIcon, AttributeIcon, DeleteNodeIcon, DetectIcon, ExitIcon, HandDrawIcon, LogIcon, MapIcon, MergeNodeIcon, MoveNodeIcon, PolygonIcon, RedoIcon, RemoveIcon, SelectIcon, SettingsIcon, ShootIcon, SpanIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./Icons";
+import { AddNodeIcon, AttributeIcon, CancelIcon, DeleteNodeIcon, DetectIcon, ExitIcon, HandDrawIcon, LogIcon, MapIcon, MergeNodeIcon, MoveNodeIcon, PolygonIcon, RedoIcon, RemoveIcon, SaveIcon, SelectIcon, SettingsIcon, ShootIcon, SpanIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./Icons";
 import EditMapBtn from "./EditMapBtn";
 
 export default function EditMapTab() {
     return (
-        <div className="flex-1">
+        <div className="flex-1 flex flex-col h-full overflow-y-auto">
             <div className="p-2">
                 <button className="p-2 flex w-full text-white bg-[#1E2E33] rounded-lg">
                     < DetectIcon />
@@ -108,6 +108,16 @@ export default function EditMapTab() {
                 <button className="p-2 flex w-full text-black bg-[#E8F3FF] rounded-lg">
                     < ShootIcon />
                     <label className="ml-2 mr-auto">Remove</label>
+                </button>
+            </div>
+            <div className="sticky bottom-0 mt-auto h-fit p-3 flex items-center justify-center bg-white shadow-[0_0_30px_0_rgba(0,0,0,0.1)] rounded-t-2xl">
+                <button className=" mr-2 p-2 flex w-full text-black bg-[#E5E8EB] rounded-lg">
+                    < CancelIcon />
+                    <label className="ml-2 mr-auto">Cancel</label>
+                </button>
+                <button className="p-2 flex w-full text-white bg-[#1E2E33] rounded-lg">
+                    < SaveIcon />
+                    <label className="ml-2 mr-auto">Save</label>
                 </button>
             </div>
         </div>
