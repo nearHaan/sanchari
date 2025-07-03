@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ExitIcon, LogIcon, MapIcon, SettingsIcon } from "./Icons";
 import EditMapTab from "./EditMapTab";
 import LogCard from "./LogCard";
 import { useRouter } from "next/navigation";
 
-export default function SideBarEditMap() {
+export default function SideBarEditMap({ selectedRoadId }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("map");
+    const [versionHistory, setVersionHistory] = useState([]);
 
     async function onTabClick(tab) {
         if (tab == "exit") {
@@ -45,6 +46,15 @@ export default function SideBarEditMap() {
         },
     ];
 
+    useEffect(() => {
+        if (activeTab === "log" && selectedRoadId) {
+            fetch(`/api/roads/${selectedRoadId}/versions`)
+                .then((res) => res.json())
+                .then((data) => setVersionHistory(data));
+        }
+    }, [activeTab, selectedRoadId]);
+
+
     return (
         <div className="flex absolute z-30 top-0 bottom-0 left-0 w-90 bg-white rounded-r-2xl">
             <div className="flex flex-col bg-[#F0F2F5] w-auto">
@@ -65,19 +75,22 @@ export default function SideBarEditMap() {
             </div>
             {(activeTab == "map") && <EditMapTab />}
             {(activeTab == "log") && (
-                <div className="flex-1">
-                    {log.map((logItem) => {
-                        return (
+                <div className="flex-1 overflow-y-auto p-2">
+                    {versionHistory.length === 0 ? (
+                        <p className="text-center text-gray-400">No versions available</p>
+                    ) : (
+                        versionHistory.map((v, i) => (
                             <LogCard
-                                key={logItem.id}
-                                timestamp={logItem.timestamp}
-                                name={logItem.name}
-                                desc={logItem.desc}
+                                key={i}
+                                timestamp={new Date(v.valid_from).toLocaleString()}
+                                name={v.edited_by || "Unknown"}
+                                desc={v.edit_reason || "Edited"}
                             />
-                        );
-                    })}
+                        ))
+                    )}
                 </div>
             )}
+
         </div>
     );
 }

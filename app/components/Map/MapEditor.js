@@ -24,6 +24,7 @@ const createNodeIcon = () =>
 
 const GeoJSONEditor = ({
   user,
+  setSelectedRoadId,
   villageFeature,
   roadGeojson,
   setRoadGeojson,
@@ -81,8 +82,8 @@ const GeoJSONEditor = ({
               selectedFeatureId === roadid
                 ? "green"
                 : isLocked
-                ? "#aaa"
-                : "red",
+                  ? "#aaa"
+                  : "red",
             weight: 6,
             opacity: 0.7,
           };
@@ -101,6 +102,7 @@ const GeoJSONEditor = ({
             }
 
             setSelectedFeatureId(roadid);
+            setSelectedRoadId(roadid);
             socket.emit("road-lock", { roadid, username: user });
 
             const coords = [];
@@ -157,7 +159,30 @@ const GeoJSONEditor = ({
     };
   }, [selectedFeatureId]);
 
-  const updateNode = (nodeIndex, newLatLng) => {
+  async function saveUpdatedRoad(roadId, updatedGeoJSON, username, reason) {
+    const response = await fetch("/api/geojson/update-road", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: roadId,
+        updatedGeoJSON,
+        edited_by: username,
+        edit_reason: reason,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to save update");
+    }
+
+    return await response.json(); // { success: true }
+  }
+
+
+  const updateNode = async (nodeIndex, newLatLng) => {
     const selectedFeature = roadGeojson?.features?.find(
       (f) => f.properties.roadid === selectedFeatureId
     );
@@ -199,14 +224,13 @@ const GeoJSONEditor = ({
 
     socket.emit("road-edit", updatedFeature);
 
-    fetch("/api/geojson/update-road", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: selectedFeatureId,
-        updatedGeoJSON: updatedFeature,
-      }),
-    });
+    await saveUpdatedRoad(
+      selectedFeatureId,
+      updatedFeature,
+      user,
+      "Changed Road"
+    );
+
   };
 
   return (
@@ -231,6 +255,7 @@ const GeoJSONEditor = ({
 
 export default function MapEditor({
   user,
+  setSelectedRoadId,
   villageFeature,
   roadGeojson,
   setRoadGeojson,
@@ -301,6 +326,7 @@ export default function MapEditor({
         {(villageFeature || roadGeojson) && (
           <GeoJSONEditor
             user={user}
+            setSelectedRoadId={setSelectedRoadId}
             villageFeature={villageFeature}
             roadGeojson={roadGeojson}
             setRoadGeojson={setRoadGeojson}

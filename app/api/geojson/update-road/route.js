@@ -2,16 +2,25 @@ import pool from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function PUT(req) {
-  const { id, updatedGeoJSON } = await req.json();
-
   try {
+    const { id, updatedGeoJSON, edited_by, edit_reason } = await req.json();
+
     await pool.query(
-      `UPDATE roads SET geom = ST_SetSRID(ST_GeomFromGeoJSON($1), 4326) WHERE roadid = $2`,
-      [JSON.stringify(updatedGeoJSON.geometry), id]
+      `INSERT INTO roads (
+         roadid, geom, valid_from, edited_by, edit_reason
+       )
+       VALUES (
+         $1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), NOW(), $3, $4
+       )`,
+      [id, JSON.stringify(updatedGeoJSON.geometry), edited_by, edit_reason]
     );
+
     return NextResponse.json({ success: true });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: "DB update failed" }, { status: 500 });
+  } catch (error) {
+    console.error("Failed to insert road version:", error);
+    return NextResponse.json(
+      { error: "Failed to update road geometry" },
+      { status: 500 }
+    );
   }
 }
