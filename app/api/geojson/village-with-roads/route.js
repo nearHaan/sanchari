@@ -1,4 +1,3 @@
-// File: app/api/geojson/village-with-roads/route.js
 import pool from "@/lib/db";
 import { NextResponse } from "next/server";
 
@@ -16,6 +15,7 @@ export async function GET(request) {
   }
 
   try {
+    // Fetch village geometry
     const villageQuery = `
       SELECT name, district, sub_dist, ST_AsGeoJSON(ST_Force2D(geom))::json AS geometry
       FROM kerala_districts
@@ -38,16 +38,18 @@ export async function GET(request) {
       geometry: villageRes.rows[0].geometry,
     };
 
+    // Fetch only the latest road versions (valid_to IS NULL)
     const roadsQuery = `
       SELECT
         id, roadid, roadname, surfacetyp, roadtype, width,
         ST_AsGeoJSON(ST_Force2D(geom))::json AS geometry
       FROM roads
-      WHERE ST_Intersects(geom, (
-        SELECT geom FROM kerala_districts
-        WHERE district = $1 AND sub_dist = $2 AND name = $3
-        LIMIT 1
-      ))
+      WHERE valid_to IS NULL
+        AND ST_Intersects(geom, (
+          SELECT geom FROM kerala_districts
+          WHERE district = $1 AND sub_dist = $2 AND name = $3
+          LIMIT 1
+        ))
     `;
 
     const roadsRes = await pool.query(roadsQuery, [district, sub_dist, name]);
