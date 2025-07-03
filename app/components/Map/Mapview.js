@@ -114,7 +114,7 @@ export default function MapView({ userPosition, geojson }) {
         {zoom >= 10 && (
           <WMSTileLayer
             url="http://localhost:8080/geoserver/sanchari/wms"
-            layers="sanchari:roads"
+            layers="sanchari:roads_latest"
             format="image/png"
             transparent={true}
             version="1.1.0"
