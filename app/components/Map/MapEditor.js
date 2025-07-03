@@ -33,6 +33,7 @@ const GeoJSONEditor = ({
   setSelectedFeatureId,
   lockedRoads,
   setLockedRoads,
+  setRoadInfo={setRoadInfo}
 }) => {
   const map = useMap();
   const layerRef = useRef(null);
@@ -104,6 +105,9 @@ const GeoJSONEditor = ({
 
             setSelectedFeatureId(roadid);
             setSelectedRoadId(roadid);
+            fetch(`api/roads/${roadid}/info/`)
+              .then(res => res.json())
+              .then(res => setRoadInfo(res));
             socket.emit("road-lock", { roadid, username: user });
 
             const coords = [];
@@ -232,6 +236,7 @@ export default function MapEditor({
   villageFeature,
   roadGeojson,
   setRoadGeojson,
+  setRoadInfo
 }) {
   const defaultPosition = [10.8505, 76.2711];
   const mapRef = useRef(null);
@@ -308,6 +313,7 @@ export default function MapEditor({
             setSelectedFeatureId={setSelectedFeatureId}
             lockedRoads={lockedRoads}
             setLockedRoads={setLockedRoads}
+            setRoadInfo={setRoadInfo}
           />
         )}
       </MapContainer>

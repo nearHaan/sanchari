@@ -10,13 +10,13 @@ const MapEditor = dynamic(() => import("./MapEditor"), {
 
 export default function MapEditorWrapper({ username, setSelectedRoadId, setUpdatedGeojson, villageFeature,
   roadGeojson,
-  setRoadGeojson }) {
+  setRoadGeojson, setRoadInfo }) {
 
   return (
     <div className="flex h-full">
       <MapEditor user={username} setSelectedRoadId={setSelectedRoadId} setUpdatedGeojson={setUpdatedGeojson} villageFeature={villageFeature}
         roadGeojson={roadGeojson}
-        setRoadGeojson={setRoadGeojson} />
+        setRoadGeojson={setRoadGeojson} setRoadInfo={setRoadInfo}/>
     </div>
   );
 };
