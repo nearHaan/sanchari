@@ -1,5 +1,6 @@
 import { AddNodeIcon, AttributeIcon, CancelIcon, DeleteNodeIcon, DetectIcon, ExitIcon, HandDrawIcon, LogIcon, MapIcon, MergeNodeIcon, MoveNodeIcon, PolygonIcon, RedoIcon, RemoveIcon, SaveIcon, SelectIcon, SettingsIcon, ShootIcon, SpanIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./Icons";
 import EditMapBtn from "./EditMapBtn";
+import toast from "react-hot-toast";
 
 export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
 
@@ -26,12 +27,18 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
     }
 
     const onSave = async () => {
-        await saveUpdatedRoad(
-            roadId,
-            updatedGeoJSON,
-            username,
-            "Changed Road"
-        );
+        if (!roadId || !updatedGeoJSON) {
+            toast.error('No Changes made');
+            return;
+        } else {
+            await saveUpdatedRoad(
+                roadId,
+                updatedGeoJSON,
+                username,
+                "Changed Road"
+            );
+        }
+
     }
     return (
         <div className="flex-1 flex flex-col h-full overflow-y-auto">
