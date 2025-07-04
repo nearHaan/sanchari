@@ -7,10 +7,9 @@ export async function PUT(req) {
 
     await pool.query(
       `INSERT INTO roads (
-         roadid, geom, valid_from, edited_by, edit_reason
-       )
-       VALUES (
-         $1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), NOW(), $3, $4
+         roadid, geom, edited_by, edit_reason
+       ) VALUES (
+         $1, ST_SetSRID(ST_GeomFromGeoJSON($2), 4326), $3, $4
        )`,
       [id, JSON.stringify(updatedGeoJSON.geometry), edited_by, edit_reason]
     );

@@ -46,8 +46,8 @@ export default function EditMapPageClient({ username }) {
                             </div>
                             < RoadInfoBox
                                 roadid={roadInfo.roadid}
-                                roadName={roadInfo.roadName}
-                                roadLen={roadInfo.roadLen}
+                                roadName={roadInfo.roadname}
+                                roadLen={roadInfo.roadlength}
                                 munci={roadInfo.munci}
                                 panch={roadInfo.panch}
                                 block={roadInfo.block}
