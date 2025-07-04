@@ -26,17 +26,24 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
         return await response.json(); // { success: true }
     }
 
-    const onSave = async () => {
-        if (!roadId || !updatedGeoJSON) {
-            toast.error('No Changes made');
-            return;
-        } else {
+    const handleSave = async () => {
+        const confirmed = window.confirm('Are you sure you want to commit the changes?\nThis cannot be undone');
+        if (confirmed) {
             await saveUpdatedRoad(
                 roadId,
                 updatedGeoJSON,
                 username,
                 "Changed Road"
             );
+        }
+    };
+
+    const onSave = async () => {
+        if (!roadId || !updatedGeoJSON) {
+            toast.error('No Changes made');
+            return;
+        } else {
+            await handleSave();
         }
 
     }
