@@ -56,20 +56,19 @@ export default function EditMapPageClient({ username }) {
                                     width={roadInfo.width}
                                     surfaceType={roadInfo.surfacetyp}
                                     soilType={roadInfo.soiltype}
-                                    onClick={()=>{setShowRoadInfo(false)}}
+                                    onClick={() => { setShowRoadInfo(false) }}
                                 />
                             )}
                             {(!showRoadInfo) && (
-                                <button onClick={()=>{setShowRoadInfo(true)}} className="mt-2 p-3 h-12 flex items-center bg-[#1E2E33] rounded-2xl text-white shadow-md w-[150] cursor-pointer hover:scale-102 transition">
+                                <button onClick={() => { setShowRoadInfo(true) }} className="mt-2 p-3 h-12 flex items-center justify-center bg-[#1E2E33] rounded-2xl text-white shadow-md w-12 cursor-pointer hover:scale-102 transition">
                                     <RoadIcon />
-                                    <label className="ml-2 text-sm cursor-pointer">Road Info</label>
                                 </button>
                             )}
                         </div>
                         <div className="absolute inset-0 z-10">
                             <MapEditorWrapper username={username} setSelectedRoadId={setSelectedRoadId} setUpdatedGeojson={setUpdatedGeojson} villageFeature={villageFeature}
                                 roadGeojson={roadGeojson}
-                                setRoadGeojson={setRoadGeojson} setRoadInfo={setRoadInfo} setShowRoadInfo={setShowRoadInfo}/>
+                                setRoadGeojson={setRoadGeojson} setRoadInfo={setRoadInfo} setShowRoadInfo={setShowRoadInfo} />
                         </div>
                     </div>
                 </div>
