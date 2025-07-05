@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   MapContainer,
@@ -10,9 +10,10 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { io } from "socket.io-client";
+import { useMapTool } from "@/app/context/MapToolContext";
 
 // WebSocket connection
-const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL); // 👈 Use public env var
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL);
 
 const createNodeIcon = () =>
   L.divIcon({
@@ -33,7 +34,7 @@ const GeoJSONEditor = ({
   setSelectedFeatureId,
   lockedRoads,
   setLockedRoads,
-  setRoadInfo={setRoadInfo},
+  setRoadInfo = { setRoadInfo },
   setShowRoadInfo
 }) => {
   const map = useMap();
@@ -41,6 +42,39 @@ const GeoJSONEditor = ({
   const roadLayersRef = useRef(new Map());
   const [nodes, setNodes] = useState([]);
   const hasZoomed = useRef(false);
+  const { tool, setTool } = useMapTool();
+
+  useEffect(() => {
+    if (!tool || !map) {
+      setTool('move');
+    }
+
+    if (tool === 'move') {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.doubleClickZoom.enable();
+      map.scrollWheelZoom.enable();
+      map.boxZoom.enable();
+      map.keyboard.enable();
+    } else {
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.doubleClickZoom.disable();
+      map.scrollWheelZoom.disable();
+      map.boxZoom.disable();
+      map.keyboard.disable();
+    }
+
+    if (tool == "zoom-in") {
+      map.zoomIn();
+      setTool('');
+    }
+
+    if (tool == "zoom-out") {
+      map.zoomOut();
+      setTool('');
+    }
+  }, [tool, map]);
 
   useEffect(() => {
     const esc = (e) => {

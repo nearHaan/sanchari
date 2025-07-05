@@ -1,8 +1,13 @@
+'use client';
+
 import { AddNodeIcon, AttributeIcon, CancelIcon, DeleteNodeIcon, DetectIcon, ExitIcon, HandDrawIcon, LogIcon, MapIcon, MergeNodeIcon, MoveNodeIcon, PolygonIcon, RedoIcon, RemoveIcon, SaveIcon, SelectIcon, SettingsIcon, ShootIcon, SpanIcon, UndoIcon, ZoomInIcon, ZoomOutIcon } from "./Icons";
 import EditMapBtn from "./EditMapBtn";
 import toast from "react-hot-toast";
+import { useMapTool } from "../context/MapToolContext";
 
 export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
+
+    const { setTool } = useMapTool();
 
     async function saveUpdatedRoad(roadId, updatedGeoJSON, username, reason) {
         const response = await fetch("/api/geojson/update-road", {
@@ -60,19 +65,19 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
             </div>
             <div className="p-2 grid grid-cols-6 gap-2">
                 <EditMapBtn
-                    id="span"
+                    id="move"
                     icon={<SpanIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("move")}
                 />
                 <EditMapBtn
                     id="zoom-out"
                     icon={<ZoomOutIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("zoom-out")}
                 />
                 <EditMapBtn
                     id="zoom-in"
                     icon={<ZoomInIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("zoom-in")}
                 />
             </div>
             <div className="px-2 py-1 flex text-black text-sm bg-[#E5E8EB]">
@@ -82,38 +87,38 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
                 <EditMapBtn
                     id="select"
                     icon={<SelectIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("select")}
                 />
                 <EditMapBtn
                     id="polygon"
                     icon={<PolygonIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("polygon")}
                 />
                 <EditMapBtn
                     id="free-hand"
                     icon={<HandDrawIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("free-hand")}
                 />
                 <EditMapBtn
-                    id="remvove"
+                    id="remove"
                     icon={<RemoveIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("remove")}
                     bg="bg-[#FFD2D2]"
                 />
                 <EditMapBtn
                     id="undo"
                     icon={<UndoIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("undo")}
                 />
                 <EditMapBtn
                     id="redo"
                     icon={<RedoIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("redo")}
                 />
                 <EditMapBtn
                     id="attribute"
                     icon={<AttributeIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("attribute")}
                 />
             </div>
             <div className="px-2 py-1 flex text-black text-sm bg-[#E5E8EB]">
@@ -123,23 +128,23 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
                 <EditMapBtn
                     id="add-node"
                     icon={<AddNodeIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("add-node")}
                 />
                 <EditMapBtn
                     id="delete-node"
                     icon={<DeleteNodeIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("delete-node")}
                     bg="bg-[#FFD2D2]"
                 />
                 <EditMapBtn
                     id="move-node"
                     icon={<MoveNodeIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("move-node")}
                 />
                 <EditMapBtn
                     id="merge-node"
                     icon={<MergeNodeIcon />}
-                    onClick={(name) => { }}
+                    onClick={(name) => setTool("merge-node")}
                 />
             </div>
             <div className="px-2 py-1 flex text-black text-sm bg-[#E5E8EB]">
