@@ -52,6 +52,9 @@ export default function SideBarEditMap({ selectedRoadId, updatedGeoJSON, usernam
                 .then((res) => res.json())
                 .then((data) => setVersionHistory(data));
         }
+        if (!selectedRoadId) {
+            setVersionHistory([]);
+        }
     }, [activeTab, selectedRoadId]);
 
 
@@ -76,8 +79,10 @@ export default function SideBarEditMap({ selectedRoadId, updatedGeoJSON, usernam
             {(activeTab == "map") && <EditMapTab roadId={selectedRoadId} updatedGeoJSON={updatedGeoJSON} username={username}/>}
             {(activeTab == "log") && (
                 <div className="flex-1 overflow-y-auto p-2">
+                    <label className="mb-2 text-black text-xl">Change Log</label>
+                    <hr className="border-gray-400 border-1 my-2"/>
                     {versionHistory.length === 0 ? (
-                        <p className="text-center text-gray-400">No versions available</p>
+                        <p className="mt-2 text-center text-gray-400">No versions available</p>
                     ) : (
                         versionHistory.map((v, i) => (
                             <LogCard

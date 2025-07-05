@@ -99,6 +99,7 @@ const GeoJSONEditor = ({
         socket.emit('road-unlock', { roadid: selectedFeatureId });
         setSelectedFeatureId(null);
         setShowRoadInfo(false);
+        setSelectedRoadId(null);
         setNodes([]);
         undoStack.current = [];
         redoStack.current = [];
@@ -165,6 +166,7 @@ const GeoJSONEditor = ({
           roadLayersRef.current.set(feature.properties.roadid, layer);
 
           layer.on('click', () => {
+            if (tool !== "select") return;
             const roadid = feature.properties.roadid;
             if (lockedRoads[roadid]) return;
 
@@ -222,7 +224,7 @@ const GeoJSONEditor = ({
         hasZoomed.current = true;
       }
     }
-  }, [villageFeature, roadGeojson, selectedFeatureId, lockedRoads]);
+  }, [villageFeature, roadGeojson, selectedFeatureId, lockedRoads, tool]);
 
   useEffect(() => {
     const handleUnload = () => {
