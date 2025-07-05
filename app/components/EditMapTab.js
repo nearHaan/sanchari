@@ -7,7 +7,7 @@ import { useMapTool } from "../context/MapToolContext";
 
 export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
 
-    const { setTool, cancelEditRef } = useMapTool();
+    const { tool, setTool, cancelEditRef } = useMapTool();
 
     async function saveUpdatedRoad(roadId, updatedGeoJSON, username, reason) {
         const response = await fetch("/api/geojson/update-road", {
@@ -75,16 +75,19 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
                     id="move"
                     icon={<SpanIcon />}
                     onClick={(name) => setTool("move")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="zoom-out"
                     icon={<ZoomOutIcon />}
                     onClick={(name) => setTool("zoom-out")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="zoom-in"
                     icon={<ZoomInIcon />}
                     onClick={(name) => setTool("zoom-in")}
+                    tool={tool}
                 />
             </div>
             <div className="px-2 py-1 flex text-black text-sm bg-[#E5E8EB]">
@@ -95,37 +98,44 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
                     id="select"
                     icon={<SelectIcon />}
                     onClick={(name) => setTool("select")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="polygon"
                     icon={<PolygonIcon />}
                     onClick={(name) => setTool("polygon")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="free-hand"
                     icon={<HandDrawIcon />}
                     onClick={(name) => setTool("free-hand")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="remove"
                     icon={<RemoveIcon />}
                     onClick={(name) => setTool("remove")}
                     bg="bg-[#FFD2D2]"
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="undo"
                     icon={<UndoIcon />}
                     onClick={(name) => setTool("undo")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="redo"
                     icon={<RedoIcon />}
                     onClick={(name) => setTool("redo")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="attribute"
                     icon={<AttributeIcon />}
                     onClick={(name) => setTool("attribute")}
+                    tool={tool}
                 />
             </div>
             <div className="px-2 py-1 flex text-black text-sm bg-[#E5E8EB]">
@@ -136,22 +146,26 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
                     id="add-node"
                     icon={<AddNodeIcon />}
                     onClick={(name) => setTool("add-node")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="delete-node"
                     icon={<DeleteNodeIcon />}
                     onClick={(name) => setTool("delete-node")}
                     bg="bg-[#FFD2D2]"
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="move-node"
                     icon={<MoveNodeIcon />}
                     onClick={(name) => setTool("move-node")}
+                    tool={tool}
                 />
                 <EditMapBtn
                     id="merge-node"
                     icon={<MergeNodeIcon />}
                     onClick={(name) => setTool("merge-node")}
+                    tool={tool}
                 />
             </div>
             <div className="px-2 py-1 flex text-black text-sm bg-[#E5E8EB]">
