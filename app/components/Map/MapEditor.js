@@ -42,9 +42,10 @@ const GeoJSONEditor = ({
   const roadLayersRef = useRef(new Map());
   const undoStack = useRef([]);
   const redoStack = useRef([]);
+  const beforeSave = useRef('');
   const [nodes, setNodes] = useState([]);
   const hasZoomed = useRef(false);
-  const { tool, setTool } = useMapTool();
+  const { tool, setTool, cancelEditRef } = useMapTool();
 
   useEffect(() => {
     if (!tool || !map) {
@@ -87,6 +88,10 @@ const GeoJSONEditor = ({
       setTool('');
     }
   }, [tool, map]);
+
+  useEffect(() => {
+    cancelEditRef.current = onCancelChange;
+  }, [roadGeojson, selectedFeatureId]);
 
   useEffect(() => {
     const esc = (e) => {
@@ -242,6 +247,9 @@ const GeoJSONEditor = ({
 
     const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
     undoStack.current.push(prevFeature);
+    if(!beforeSave.current){
+      beforeSave.current = prevFeature;
+    }
     redoStack.current = [];
 
     const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
@@ -252,6 +260,11 @@ const GeoJSONEditor = ({
 
     applyFeatureChange(updatedFeature);
   };
+
+  const onCancelChange = () => {
+    if (!beforeSave.current) return;
+    applyFeatureChange(beforeSave.current);
+  }
 
   const applyFeatureChange = (feature) => {
     const updatedGeojson = JSON.parse(JSON.stringify(roadGeojson));

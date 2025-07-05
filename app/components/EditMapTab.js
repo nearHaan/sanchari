@@ -7,7 +7,7 @@ import { useMapTool } from "../context/MapToolContext";
 
 export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
 
-    const { setTool } = useMapTool();
+    const { setTool, cancelEditRef } = useMapTool();
 
     async function saveUpdatedRoad(roadId, updatedGeoJSON, username, reason) {
         const response = await fetch("/api/geojson/update-road", {
@@ -40,6 +40,13 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
                 username,
                 "Changed Road"
             );
+        }
+    };
+
+    const handleDiscard = async () => {
+        const confirmed = window.confirm('Are you sure you want to discard the changes?\nThis cannot be undone');
+        if (confirmed) {
+            cancelEditRef.current?.();
         }
     };
 
@@ -161,7 +168,7 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
                 </button>
             </div>
             <div className="sticky bottom-0 mt-auto h-fit p-3 flex items-center justify-center bg-white shadow-[0_0_30px_0_rgba(0,0,0,0.1)] rounded-t-2xl">
-                <button className="mr-2 p-2 flex w-full text-black bg-[#E5E8EB] rounded-lg cursor-pointer">
+                <button onClick={handleDiscard} className="mr-2 p-2 flex w-full text-black bg-[#E5E8EB] rounded-lg cursor-pointer">
                     < CancelIcon />
                     <label className="ml-2 mr-auto cursor-pointer">Cancel</label>
                 </button>
