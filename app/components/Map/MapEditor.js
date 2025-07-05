@@ -42,7 +42,7 @@ const GeoJSONEditor = ({
   const roadLayersRef = useRef(new Map());
   const undoStack = useRef([]);
   const redoStack = useRef([]);
-  const beforeSave = useRef('');
+  const beforeSave = useRef(null);
   const [nodes, setNodes] = useState([]);
   const hasZoomed = useRef(false);
   const { tool, setTool, cancelEditRef } = useMapTool();
@@ -169,6 +169,12 @@ const GeoJSONEditor = ({
             if (tool !== "select") return;
             const roadid = feature.properties.roadid;
             if (lockedRoads[roadid]) return;
+            const currentFeature = roadGeojson?.features?.find(f => f.properties.roadid === selectedFeatureId);
+            if (beforeSave.current && currentFeature && currentFeature !== beforeSave.current) {
+              const confirmed = window.alert('Either save or discard your current edit to select another road');
+              return;
+            }
+
 
             if (selectedFeatureId && selectedFeatureId !== roadid) {
               socket.emit('road-unlock', { roadid: selectedFeatureId });
@@ -224,7 +230,7 @@ const GeoJSONEditor = ({
         hasZoomed.current = true;
       }
     }
-  }, [villageFeature, roadGeojson, selectedFeatureId, lockedRoads, tool]);
+  }, [villageFeature, roadGeojson, selectedFeatureId, lockedRoads, tool, beforeSave]);
 
   useEffect(() => {
     const handleUnload = () => {
@@ -264,34 +270,34 @@ const GeoJSONEditor = ({
   };
 
   const deleteNode = (nodeIndex) => {
-  const selectedFeature = roadGeojson?.features?.find(
-    (f) => f.properties.roadid === selectedFeatureId
-  );
-  if (!selectedFeature) return;
+    const selectedFeature = roadGeojson?.features?.find(
+      (f) => f.properties.roadid === selectedFeatureId
+    );
+    if (!selectedFeature) return;
 
-  const node = nodes.find((n) => n.index === nodeIndex);
-  if (!node) return;
+    const node = nodes.find((n) => n.index === nodeIndex);
+    if (!node) return;
 
-  const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
-  undoStack.current.push(prevFeature);
-  if (!beforeSave.current) {
-    beforeSave.current = prevFeature;
-  }
-  redoStack.current = [];
+    const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
+    undoStack.current.push(prevFeature);
+    if (!beforeSave.current) {
+      beforeSave.current = prevFeature;
+    }
+    redoStack.current = [];
 
-  const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
-  const updatedLine = updatedFeature.geometry.coordinates[node.lineIndex];
+    const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
+    const updatedLine = updatedFeature.geometry.coordinates[node.lineIndex];
 
-  // Remove the point
-  updatedLine.splice(node.pointIndex, 1);
+    // Remove the point
+    updatedLine.splice(node.pointIndex, 1);
 
-  // If a line becomes empty, remove that line
-  if (updatedLine.length === 0) {
-    updatedFeature.geometry.coordinates.splice(node.lineIndex, 1);
-  }
+    // If a line becomes empty, remove that line
+    if (updatedLine.length === 0) {
+      updatedFeature.geometry.coordinates.splice(node.lineIndex, 1);
+    }
 
-  applyFeatureChange(updatedFeature);
-};
+    applyFeatureChange(updatedFeature);
+  };
 
 
   const onCancelChange = () => {
