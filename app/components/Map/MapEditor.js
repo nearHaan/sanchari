@@ -153,8 +153,8 @@ const GeoJSONEditor = ({
               selectedFeatureId === roadid
                 ? 'green'
                 : isLocked
-                ? '#aaa'
-                : 'red',
+                  ? '#aaa'
+                  : 'red',
             weight: 6,
             opacity: 0.7,
           };
@@ -247,7 +247,7 @@ const GeoJSONEditor = ({
 
     const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
     undoStack.current.push(prevFeature);
-    if(!beforeSave.current){
+    if (!beforeSave.current) {
       beforeSave.current = prevFeature;
     }
     redoStack.current = [];
@@ -260,6 +260,37 @@ const GeoJSONEditor = ({
 
     applyFeatureChange(updatedFeature);
   };
+
+  const deleteNode = (nodeIndex) => {
+  const selectedFeature = roadGeojson?.features?.find(
+    (f) => f.properties.roadid === selectedFeatureId
+  );
+  if (!selectedFeature) return;
+
+  const node = nodes.find((n) => n.index === nodeIndex);
+  if (!node) return;
+
+  const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
+  undoStack.current.push(prevFeature);
+  if (!beforeSave.current) {
+    beforeSave.current = prevFeature;
+  }
+  redoStack.current = [];
+
+  const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
+  const updatedLine = updatedFeature.geometry.coordinates[node.lineIndex];
+
+  // Remove the point
+  updatedLine.splice(node.pointIndex, 1);
+
+  // If a line becomes empty, remove that line
+  if (updatedLine.length === 0) {
+    updatedFeature.geometry.coordinates.splice(node.lineIndex, 1);
+  }
+
+  applyFeatureChange(updatedFeature);
+};
+
 
   const onCancelChange = () => {
     if (!beforeSave.current) return;
@@ -329,12 +360,17 @@ const GeoJSONEditor = ({
           key={node.index}
           position={[node.lat, node.lng]}
           icon={createNodeIcon()}
-          draggable={true}
+          draggable={tool === 'move-node'}
           eventHandlers={{
             dragend: (e) => {
               const latlng = e.target.getLatLng();
               updateNode(node.index, latlng);
             },
+            click: () => {
+              if (tool === 'delete-node') {
+                deleteNode(node.index);
+              }
+            }
           }}
         />
       ))}
