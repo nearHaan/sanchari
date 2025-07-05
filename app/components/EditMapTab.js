@@ -170,7 +170,7 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
             <div className="sticky bottom-0 mt-auto h-fit p-3 flex items-center justify-center bg-white shadow-[0_0_30px_0_rgba(0,0,0,0.1)] rounded-t-2xl">
                 <button onClick={handleDiscard} className="mr-2 p-2 flex w-full text-black bg-[#E5E8EB] rounded-lg cursor-pointer">
                     < CancelIcon />
-                    <label className="ml-2 mr-auto cursor-pointer">Cancel</label>
+                    <label className="ml-2 mr-auto cursor-pointer">Discard</label>
                 </button>
                 <button onClick={onSave} className="p-2 flex w-full text-white bg-[#1E2E33] rounded-lg cursor-pointer">
                     < SaveIcon />
