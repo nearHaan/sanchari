@@ -76,22 +76,25 @@ export default function SideBarEditMap({ selectedRoadId, updatedGeoJSON, usernam
                     < ExitIcon />
                 </button>
             </div>
-            {(activeTab == "map") && <EditMapTab roadId={selectedRoadId} updatedGeoJSON={updatedGeoJSON} username={username}/>}
+            {(activeTab == "map") && <EditMapTab roadId={selectedRoadId} updatedGeoJSON={updatedGeoJSON} username={username} />}
             {(activeTab == "log") && (
                 <div className="flex-1 overflow-y-auto p-2">
                     <label className="mb-2 text-black text-xl">Change Log</label>
-                    <hr className="border-gray-400 border-1 my-2"/>
+                    <hr className="border-gray-400 border-1 my-2" />
                     {versionHistory.length === 0 ? (
                         <p className="mt-2 text-center text-gray-400">No versions available</p>
                     ) : (
-                        versionHistory.map((v, i) => (
-                            <LogCard
-                                key={i}
-                                timestamp={new Date(v.valid_from).toLocaleString()}
-                                name={v.edited_by || "Unknown"}
-                                desc={v.edit_reason || "Edited"}
-                            />
-                        ))
+                        <div>
+                            <label className="text-black text-sm">Road id: {selectedRoadId}</label>
+                            {versionHistory.map((v, i) => (
+                                <LogCard
+                                    key={i}
+                                    timestamp={new Date(v.valid_from).toLocaleString()}
+                                    name={v.edited_by || "Unknown"}
+                                    desc={v.edit_reason || "Edited"}
+                                />
+                            ))}
+                        </div>
                     )}
                 </div>
             )}
