@@ -35,11 +35,13 @@ const GeoJSONEditor = ({
   lockedRoads,
   setLockedRoads,
   setRoadInfo = { setRoadInfo },
-  setShowRoadInfo
+  setShowRoadInfo,
 }) => {
   const map = useMap();
   const layerRef = useRef(null);
   const roadLayersRef = useRef(new Map());
+  const undoStack = useRef([]);
+  const redoStack = useRef([]);
   const [nodes, setNodes] = useState([]);
   const hasZoomed = useRef(false);
   const { tool, setTool } = useMapTool();
@@ -65,29 +67,55 @@ const GeoJSONEditor = ({
       map.keyboard.disable();
     }
 
-    if (tool == "zoom-in") {
+    if (tool == 'zoom-in') {
       map.zoomIn();
       setTool('');
     }
 
-    if (tool == "zoom-out") {
+    if (tool == 'zoom-out') {
       map.zoomOut();
+      setTool('');
+    }
+
+    if (tool == 'undo') {
+      undo();
+      setTool('');
+    }
+
+    if (tool == 'redo') {
+      redo();
       setTool('');
     }
   }, [tool, map]);
 
   useEffect(() => {
     const esc = (e) => {
-      if (e.key === "Escape" && selectedFeatureId) {
-        socket.emit("road-unlock", { roadid: selectedFeatureId });
+      if (e.key === 'Escape' && selectedFeatureId) {
+        socket.emit('road-unlock', { roadid: selectedFeatureId });
         setSelectedFeatureId(null);
         setShowRoadInfo(false);
         setNodes([]);
+        undoStack.current = [];
+        redoStack.current = [];
       }
     };
-    document.addEventListener("keydown", esc);
-    return () => document.removeEventListener("keydown", esc);
+    document.addEventListener('keydown', esc);
+    return () => document.removeEventListener('keydown', esc);
   }, [selectedFeatureId]);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.ctrlKey && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      } else if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
+        e.preventDefault();
+        redo();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [roadGeojson, selectedFeatureId]);
 
   useEffect(() => {
     if (!villageFeature && !roadGeojson) return;
@@ -102,9 +130,9 @@ const GeoJSONEditor = ({
     if (villageFeature) {
       L.geoJSON(villageFeature, {
         style: {
-          color: "blue",
+          color: 'blue',
           weight: 2,
-          dashArray: "4",
+          dashArray: '4',
           fillOpacity: 0.1,
         },
       }).addTo(layerGroup);
@@ -118,34 +146,34 @@ const GeoJSONEditor = ({
           return {
             color:
               selectedFeatureId === roadid
-                ? "green"
+                ? 'green'
                 : isLocked
-                  ? "#aaa"
-                  : "red",
+                ? '#aaa'
+                : 'red',
             weight: 6,
             opacity: 0.7,
           };
         },
         onEachFeature: (feature, layer) => {
-          if (feature.geometry.type !== "MultiLineString") return;
+          if (feature.geometry.type !== 'MultiLineString') return;
 
           roadLayersRef.current.set(feature.properties.roadid, layer);
 
-          layer.on("click", () => {
+          layer.on('click', () => {
             const roadid = feature.properties.roadid;
             if (lockedRoads[roadid]) return;
 
             if (selectedFeatureId && selectedFeatureId !== roadid) {
-              socket.emit("road-unlock", { roadid: selectedFeatureId });
+              socket.emit('road-unlock', { roadid: selectedFeatureId });
             }
 
             setSelectedFeatureId(roadid);
             setSelectedRoadId(roadid);
             fetch(`api/roads/${roadid}/info/`)
-              .then(res => res.json())
-              .then(res => setRoadInfo(res));
+              .then((res) => res.json())
+              .then((res) => setRoadInfo(res));
             setShowRoadInfo(true);
-            socket.emit("road-lock", { roadid, username: user });
+            socket.emit('road-lock', { roadid, username: user });
 
             const coords = [];
             feature.geometry.coordinates.forEach((line, lineIdx) => {
@@ -162,13 +190,15 @@ const GeoJSONEditor = ({
             });
 
             setNodes(coords);
+            undoStack.current = [];
+            redoStack.current = [];
           });
 
           const roadid = feature.properties.roadid;
           if (lockedRoads[roadid]) {
             layer.bindTooltip(`Being edited by ${lockedRoads[roadid]}`, {
               permanent: false,
-              direction: "top",
+              direction: 'top',
             });
           }
 
@@ -192,15 +222,14 @@ const GeoJSONEditor = ({
   useEffect(() => {
     const handleUnload = () => {
       if (selectedFeatureId) {
-        socket.emit("road-unlock", { roadid: selectedFeatureId });
+        socket.emit('road-unlock', { roadid: selectedFeatureId });
       }
     };
-    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener('beforeunload', handleUnload);
     return () => {
-      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener('beforeunload', handleUnload);
     };
   }, [selectedFeatureId]);
-
 
   const updateNode = async (nodeIndex, newLatLng) => {
     const selectedFeature = roadGeojson?.features?.find(
@@ -211,39 +240,73 @@ const GeoJSONEditor = ({
     const node = nodes.find((n) => n.index === nodeIndex);
     if (!node) return;
 
+    const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
+    undoStack.current.push(prevFeature);
+    redoStack.current = [];
+
     const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
     updatedFeature.geometry.coordinates[node.lineIndex][node.pointIndex] = [
       newLatLng.lng,
       newLatLng.lat,
     ];
 
+    applyFeatureChange(updatedFeature);
+  };
+
+  const applyFeatureChange = (feature) => {
     const updatedGeojson = JSON.parse(JSON.stringify(roadGeojson));
     const featureIndex = updatedGeojson.features.findIndex(
-      (f) => f.properties.roadid === selectedFeatureId
+      (f) => f.properties.roadid === feature.properties.roadid
     );
     if (featureIndex !== -1) {
-      updatedGeojson.features[featureIndex] = updatedFeature;
+      updatedGeojson.features[featureIndex] = feature;
       setRoadGeojson(updatedGeojson);
     }
 
-    const layer = roadLayersRef.current.get(selectedFeature.roadid);
+    const layer = roadLayersRef.current.get(feature.properties.roadid);
     if (layer) {
-      const latlngs = updatedFeature.geometry.coordinates.map((line) =>
+      const latlngs = feature.geometry.coordinates.map((line) =>
         line.map(([lng, lat]) => [lat, lng])
       );
       layer.setLatLngs(latlngs);
     }
 
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.index === nodeIndex
-          ? { ...n, lat: newLatLng.lat, lng: newLatLng.lng }
-          : n
-      )
-    );
+    const coords = [];
+    feature.geometry.coordinates.forEach((line, lineIdx) => {
+      line.forEach((point, pointIdx) => {
+        const [lng, lat] = point;
+        coords.push({
+          lat,
+          lng,
+          index: coords.length,
+          lineIndex: lineIdx,
+          pointIndex: pointIdx,
+        });
+      });
+    });
+    setNodes(coords);
+    socket.emit('road-edit', feature);
+    setUpdatedGeojson(feature);
+  };
 
-    socket.emit("road-edit", updatedFeature);
-    setUpdatedGeojson(updatedFeature);
+  const undo = () => {
+    if (!selectedFeatureId || undoStack.current.length === 0) return;
+    const prevFeature = undoStack.current.pop();
+    const currentFeature = roadGeojson.features.find(
+      (f) => f.properties.roadid === selectedFeatureId
+    );
+    redoStack.current.push(JSON.parse(JSON.stringify(currentFeature)));
+    applyFeatureChange(prevFeature);
+  };
+
+  const redo = () => {
+    if (!selectedFeatureId || redoStack.current.length === 0) return;
+    const nextFeature = redoStack.current.pop();
+    const currentFeature = roadGeojson.features.find(
+      (f) => f.properties.roadid === selectedFeatureId
+    );
+    undoStack.current.push(JSON.parse(JSON.stringify(currentFeature)));
+    applyFeatureChange(nextFeature);
   };
 
   return (
