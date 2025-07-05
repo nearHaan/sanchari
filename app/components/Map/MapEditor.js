@@ -15,13 +15,23 @@ import { useMapTool } from "@/app/context/MapToolContext";
 // WebSocket connection
 const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL);
 
-const createNodeIcon = () =>
-  L.divIcon({
-    className: "",
-    html: `<div class="w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow-md hover:scale-125 transition-transform duration-150"></div>`,
+const createNodeIcon = (tool) => {
+  const div = document.createElement('div');
+  div.className =
+    'w-3 h-3 rounded-full border-2 border-white bg-blue-600 shadow-md transition-transform duration-150 hover:scale-125';
+
+  if (tool === 'delete-node') {
+    div.className += ' hover:bg-red-600';
+  }
+
+  return L.divIcon({
+    className: '',
+    html: div.outerHTML,
     iconSize: [12, 12],
     iconAnchor: [6, 6],
   });
+};
+
 
 const GeoJSONEditor = ({
   user,
@@ -367,7 +377,7 @@ const GeoJSONEditor = ({
         <Marker
           key={node.index}
           position={[node.lat, node.lng]}
-          icon={createNodeIcon()}
+          icon={createNodeIcon(tool)}
           draggable={tool === 'move-node'}
           eventHandlers={{
             dragend: (e) => {
