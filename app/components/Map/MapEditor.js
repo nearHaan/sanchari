@@ -56,7 +56,7 @@ const GeoJSONEditor = ({
   const [historicalFeature, setHistoricalFeature] = useState(null);
   const [nodes, setNodes] = useState([]);
   const hasZoomed = useRef(false);
-  const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef, logClickRef } = useMapTool();
+  const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef, logClickRef, hideLogRef } = useMapTool();
 
   useEffect(() => {
     if (!tool || !map) {
@@ -105,6 +105,7 @@ const GeoJSONEditor = ({
     checkValidSave.current = checkTrueUpdate;
     cancelEditRef.current = onCancelChange;
     logClickRef.current = logClick;
+    hideLogRef.current = hideLog;
   }, [roadGeojson, selectedFeatureId]);
 
   useEffect(() => {
@@ -273,6 +274,10 @@ const GeoJSONEditor = ({
     fetch(`api/roads/${roadid}/timestamp/${timestamp}/`)
       .then((res) => res.json())
       .then((res) => setHistoricalFeature(res));
+  }
+
+  const hideLog = () => {
+    setHistoricalFeature(null);
   }
 
   const updateNode = async (nodeIndex, newLatLng) => {

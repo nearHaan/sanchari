@@ -12,7 +12,7 @@ export default function SideBarEditMap({ selectedRoadId, username }) {
     const [activeTab, setActiveTab] = useState("map");
     const [versionHistory, setVersionHistory] = useState([]);
     const [activeLog, setActiveLog] = useState('');
-    const {logClickRef} = useMapTool();
+    const {logClickRef, hideLogRef} = useMapTool();
 
     async function onTabClick(tab) {
         if (tab == "exit") {
@@ -99,6 +99,10 @@ export default function SideBarEditMap({ selectedRoadId, username }) {
                                     onClick={() => {
                                         setActiveLog(v.valid_from)
                                         logClickRef.current?.(v.roadid, v.valid_from)
+                                    }}
+                                    onHide={() => {
+                                        setActiveLog(null);
+                                        hideLogRef.current?.()
                                     }}
                                 />
                             ))}
