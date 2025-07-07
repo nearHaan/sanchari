@@ -4,6 +4,7 @@ import { AddNodeIcon, AttributeIcon, CancelIcon, DeleteNodeIcon, DetectIcon, Exi
 import EditMapBtn from "./EditMapBtn";
 import toast from "react-hot-toast";
 import { useMapTool } from "../context/MapToolContext";
+import { confirmWithInput } from "./confirmWithInputPromise";
 
 export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
 
@@ -32,13 +33,13 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
     }
 
     const handleSave = async () => {
-        const confirmed = window.confirm('Are you sure you want to commit the changes?\nThis cannot be undone');
-        if (confirmed) {
+        const msg = await confirmWithInput();
+        if (msg !== null) {
             await saveUpdatedRoad(
                 roadId,
                 updatedGeoJSON,
                 username,
-                "Changed Road"
+                msg
             );
         }
     };
