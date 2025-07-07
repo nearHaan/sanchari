@@ -53,9 +53,10 @@ const GeoJSONEditor = ({
   const undoStack = useRef([]);
   const redoStack = useRef([]);
   const beforeSave = useRef(null);
+  const [historicalFeature, setHistoricalFeature] = useState(null);
   const [nodes, setNodes] = useState([]);
   const hasZoomed = useRef(false);
-  const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef } = useMapTool();
+  const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef, logClickRef } = useMapTool();
 
   useEffect(() => {
     if (!tool || !map) {
@@ -103,6 +104,7 @@ const GeoJSONEditor = ({
     saveEditRef.current = onSaveChange;
     checkValidSave.current = checkTrueUpdate;
     cancelEditRef.current = onCancelChange;
+    logClickRef.current = logClick;
   }, [roadGeojson, selectedFeatureId]);
 
   useEffect(() => {
@@ -233,6 +235,16 @@ const GeoJSONEditor = ({
       });
     }
 
+    if (historicalFeature) {
+      L.geoJSON(historicalFeature, {
+        style: {
+          color: 'orange',
+          weight: 4,
+          opacity: 0.8,
+        }
+      }).addTo(layerGroup);
+    }
+
     layerGroup.addTo(map);
     layerRef.current = layerGroup;
 
@@ -243,7 +255,7 @@ const GeoJSONEditor = ({
         hasZoomed.current = true;
       }
     }
-  }, [villageFeature, roadGeojson, selectedFeatureId, lockedRoads, tool, beforeSave]);
+  }, [villageFeature, roadGeojson, selectedFeatureId, lockedRoads, tool, beforeSave, historicalFeature]);
 
   useEffect(() => {
     const handleUnload = () => {
@@ -256,6 +268,12 @@ const GeoJSONEditor = ({
       window.removeEventListener('beforeunload', handleUnload);
     };
   }, [selectedFeatureId]);
+
+  const logClick = (roadid, timestamp) => {
+    fetch(`api/roads/${roadid}/timestamp/${timestamp}/`)
+      .then((res) => res.json())
+      .then((res) => setHistoricalFeature(res));
+  }
 
   const updateNode = async (nodeIndex, newLatLng) => {
     const selectedFeature = roadGeojson?.features?.find(

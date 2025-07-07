@@ -5,11 +5,13 @@ import { ExitIcon, LogIcon, MapIcon, SettingsIcon } from "./Icons";
 import EditMapTab from "./EditMapTab";
 import LogCard from "./LogCard";
 import { useRouter } from "next/navigation";
+import { useMapTool } from "../context/MapToolContext";
 
 export default function SideBarEditMap({ selectedRoadId, username }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("map");
     const [versionHistory, setVersionHistory] = useState([]);
+    const {logClickRef} = useMapTool();
 
     async function onTabClick(tab) {
         if (tab == "exit") {
@@ -89,9 +91,10 @@ export default function SideBarEditMap({ selectedRoadId, username }) {
                             {versionHistory.map((v, i) => (
                                 <LogCard
                                     key={i}
-                                    timestamp={new Date(v.valid_from).toLocaleString()}
+                                    timestamp={v.valid_from}
                                     name={v.edited_by || "Unknown"}
                                     desc={v.edit_reason || "Edited"}
+                                    onClick={() => {logClickRef.current?.(v.roadid, v.valid_from)}}
                                 />
                             ))}
                         </div>

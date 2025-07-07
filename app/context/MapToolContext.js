@@ -9,9 +9,10 @@ export function MapToolProvider({children}){
     const saveEditRef = useRef(null);
     const cancelEditRef = useRef(null);
     const checkValidSave = useRef(null);
+    const logClickRef = useRef(null);
 
     return(
-        <MapToolContext.Provider value={{ tool, setTool, saveEditRef, checkValidSave ,cancelEditRef}}>
+        <MapToolContext.Provider value={{ tool, setTool, saveEditRef, checkValidSave ,cancelEditRef, logClickRef}}>
             {children}
         </MapToolContext.Provider>
     );
