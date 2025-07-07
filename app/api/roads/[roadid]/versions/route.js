@@ -6,10 +6,15 @@ export async function GET(req, { params }) {
 
   try {
     const result = await pool.query(
-      `SELECT roadid, valid_from, valid_to, edited_by, edit_reason
-       FROM roads
-       WHERE roadid = $1
-       ORDER BY valid_from DESC`,
+      `SELECT 
+        roadid, 
+        to_char(valid_from, 'YYYY-MM-DD"T"HH24:MI:SS') as valid_from,
+        edited_by, 
+        edit_reason 
+      FROM roads 
+      WHERE roadid = $1 
+      ORDER BY valid_from DESC
+`,
       [roadid]
     );
 
