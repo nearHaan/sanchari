@@ -12,9 +12,9 @@ export default function LogCard({timestamp, name, desc, onClick}) {
                     <label className="text-black text-sm">{name}</label>
                 </div>
                 <label className="text-black text-sm">{desc}</label>
-                <button onClick={onClick} className="flex items-center justify-end text-[#1A3FE5] text-xs font-bold">
-                    Show in map
-                </button>
+                <div onClick={onClick} className="flex items-center justify-end">
+                    <button className="text-[#1A3FE5] text-xs font-bold">Show in map</button>
+                </div>
             </div>
         </div>
     );
