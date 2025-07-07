@@ -441,7 +441,7 @@ const GeoJSONEditor = ({
           key={node.index}
           position={[node.lat, node.lng]}
           icon={createNodeIcon(tool)}
-          draggable={tool === 'move-node'}
+          draggable={tool === 'move-node' || tool === 'add-node'}
           eventHandlers={{
             dragend: (e) => {
               const latlng = e.target.getLatLng();
