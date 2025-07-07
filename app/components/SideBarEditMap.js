@@ -6,7 +6,7 @@ import EditMapTab from "./EditMapTab";
 import LogCard from "./LogCard";
 import { useRouter } from "next/navigation";
 
-export default function SideBarEditMap({ selectedRoadId, updatedGeoJSON, username }) {
+export default function SideBarEditMap({ selectedRoadId, username }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("map");
     const [versionHistory, setVersionHistory] = useState([]);
@@ -76,7 +76,7 @@ export default function SideBarEditMap({ selectedRoadId, updatedGeoJSON, usernam
                     < ExitIcon />
                 </button>
             </div>
-            {(activeTab == "map") && <EditMapTab roadId={selectedRoadId} updatedGeoJSON={updatedGeoJSON} username={username} />}
+            {(activeTab == "map") && <EditMapTab roadId={selectedRoadId} username={username} />}
             {(activeTab == "log") && (
                 <div className="flex-1 overflow-y-auto p-2">
                     <label className="mb-2 text-black text-xl">Change Log</label>

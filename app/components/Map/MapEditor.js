@@ -37,7 +37,6 @@ const GeoJSONEditor = ({
   user,
   setSelectedRoadId,
   villageFeature,
-  setUpdatedGeojson,
   roadGeojson,
   setRoadGeojson,
   selectedFeatureId,
@@ -50,12 +49,13 @@ const GeoJSONEditor = ({
   const map = useMap();
   const layerRef = useRef(null);
   const roadLayersRef = useRef(new Map());
+  const updatedGeojson = useRef(null);
   const undoStack = useRef([]);
   const redoStack = useRef([]);
   const beforeSave = useRef(null);
   const [nodes, setNodes] = useState([]);
   const hasZoomed = useRef(false);
-  const { tool, setTool, cancelEditRef } = useMapTool();
+  const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef } = useMapTool();
 
   useEffect(() => {
     if (!tool || !map) {
@@ -100,6 +100,8 @@ const GeoJSONEditor = ({
   }, [tool, map]);
 
   useEffect(() => {
+    saveEditRef.current = onSaveChange;
+    checkValidSave.current = checkTrueUpdate;
     cancelEditRef.current = onCancelChange;
   }, [roadGeojson, selectedFeatureId]);
 
@@ -192,6 +194,7 @@ const GeoJSONEditor = ({
 
             setSelectedFeatureId(roadid);
             setSelectedRoadId(roadid);
+            updatedGeojson.current = null;
             fetch(`api/roads/${roadid}/info/`)
               .then((res) => res.json())
               .then((res) => setRoadInfo(res));
@@ -275,6 +278,7 @@ const GeoJSONEditor = ({
       newLatLng.lng,
       newLatLng.lat,
     ];
+    updatedGeojson.current = updatedFeature;
 
     applyFeatureChange(updatedFeature);
   };
@@ -308,6 +312,44 @@ const GeoJSONEditor = ({
 
     applyFeatureChange(updatedFeature);
   };
+
+  async function saveUpdatedRoad(roadId, updatedGeoJSON, username, reason) {
+    const response = await fetch("/api/geojson/update-road", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: roadId,
+        updatedGeoJSON,
+        edited_by: username,
+        edit_reason: reason,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to save update");
+    }
+
+    return await response.json();
+  }
+
+  const onSaveChange = async (msg) => {
+    await saveUpdatedRoad(
+      selectedFeatureId,
+      updatedGeojson.current,
+      user,
+      msg
+    );
+  }
+
+  const checkTrueUpdate = () => {
+    if (updatedGeojson.current) {
+      return true;
+    }
+    return false;
+  }
 
 
   const onCancelChange = () => {
@@ -348,7 +390,7 @@ const GeoJSONEditor = ({
     });
     setNodes(coords);
     socket.emit('road-edit', feature);
-    setUpdatedGeojson(feature);
+    updatedGeojson.current = feature;
   };
 
   const undo = () => {
@@ -399,7 +441,6 @@ const GeoJSONEditor = ({
 export default function MapEditor({
   user,
   setSelectedRoadId,
-  setUpdatedGeojson,
   villageFeature,
   roadGeojson,
   setRoadGeojson,
@@ -473,7 +514,6 @@ export default function MapEditor({
           <GeoJSONEditor
             user={user}
             setSelectedRoadId={setSelectedRoadId}
-            setUpdatedGeojson={setUpdatedGeojson}
             villageFeature={villageFeature}
             roadGeojson={roadGeojson}
             setRoadGeojson={setRoadGeojson}

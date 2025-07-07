@@ -6,41 +6,14 @@ import toast from "react-hot-toast";
 import { useMapTool } from "../context/MapToolContext";
 import { confirmWithInput } from "./confirmWithInputPromise";
 
-export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
+export default function EditMapTab({ roadId }) {
 
-    const { tool, setTool, cancelEditRef } = useMapTool();
-
-    async function saveUpdatedRoad(roadId, updatedGeoJSON, username, reason) {
-        const response = await fetch("/api/geojson/update-road", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                id: roadId,
-                updatedGeoJSON,
-                edited_by: username,
-                edit_reason: reason,
-            }),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to save update");
-        }
-
-        return await response.json(); // { success: true }
-    }
+    const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef } = useMapTool();
 
     const handleSave = async () => {
         const msg = await confirmWithInput();
         if (msg !== null) {
-            await saveUpdatedRoad(
-                roadId,
-                updatedGeoJSON,
-                username,
-                msg
-            );
+            saveEditRef.current?.(msg);
         }
     };
 
@@ -52,7 +25,7 @@ export default function EditMapTab({ roadId, updatedGeoJSON, username }) {
     };
 
     const onSave = async () => {
-        if (!roadId || !updatedGeoJSON) {
+        if (!roadId || !checkValidSave.current?.()) {
             toast.error('No Changes made');
             return;
         } else {

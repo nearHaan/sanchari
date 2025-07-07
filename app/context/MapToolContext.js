@@ -6,10 +6,12 @@ const MapToolContext = createContext();
 
 export function MapToolProvider({children}){
     const [tool, setTool] = useState('move');
+    const saveEditRef = useRef(null);
     const cancelEditRef = useRef(null);
+    const checkValidSave = useRef(null);
 
     return(
-        <MapToolContext.Provider value={{ tool, setTool, cancelEditRef}}>
+        <MapToolContext.Provider value={{ tool, setTool, saveEditRef, checkValidSave ,cancelEditRef}}>
             {children}
         </MapToolContext.Provider>
     );
