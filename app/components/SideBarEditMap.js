@@ -11,6 +11,7 @@ export default function SideBarEditMap({ selectedRoadId, username }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("map");
     const [versionHistory, setVersionHistory] = useState([]);
+    const [activeLog, setActiveLog] = useState('');
     const {logClickRef} = useMapTool();
 
     async function onTabClick(tab) {
@@ -91,10 +92,14 @@ export default function SideBarEditMap({ selectedRoadId, username }) {
                             {versionHistory.map((v, i) => (
                                 <LogCard
                                     key={i}
+                                    active={activeLog}
                                     timestamp={v.valid_from}
                                     name={v.edited_by || "Unknown"}
                                     desc={v.edit_reason || "Edited"}
-                                    onClick={() => {logClickRef.current?.(v.roadid, v.valid_from)}}
+                                    onClick={() => {
+                                        setActiveLog(v.valid_from)
+                                        logClickRef.current?.(v.roadid, v.valid_from)
+                                    }}
                                 />
                             ))}
                         </div>

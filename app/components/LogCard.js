@@ -1,6 +1,6 @@
 import { AvatarIcon } from "./Icons";
 
-export default function LogCard({timestamp, name, desc, onClick}) {
+export default function LogCard({active, timestamp, name, desc, onClick}) {
     return (
         <div className="mx-2 mt-4 p-2 bg-white shadow-lg drop-shadow rounded-lg h-fit">
             <div>
@@ -12,8 +12,9 @@ export default function LogCard({timestamp, name, desc, onClick}) {
                     <label className="text-black text-sm">{name}</label>
                 </div>
                 <label className="text-black text-sm">{desc}</label>
-                <div onClick={onClick} className="flex items-center justify-end">
-                    <button className="text-[#1A3FE5] text-xs font-bold">Show in map</button>
+                <div onClick={onClick} className="mt-1 flex items-center justify-end">
+                    {active == timestamp && <button className="p-2 mr-2 bg-[#F5F5F5] text-black rounded-sm text-xs font-bold cursor-pointer">Hide</button>}
+                    <button className="p-2 bg-[#E8F3FF] text-[#1A3FE5] rounded-sm text-xs font-bold cursor-pointer">Show in map</button>
                 </div>
             </div>
         </div>
