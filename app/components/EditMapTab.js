@@ -8,7 +8,7 @@ import { confirmWithInput } from "./confirmWithInputPromise";
 
 export default function EditMapTab({ roadId }) {
 
-    const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef } = useMapTool();
+    const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef, detectedRoads, setDetectedRoads } = useMapTool();
 
     const handleSave = async () => {
         const msg = await confirmWithInput();
@@ -25,21 +25,42 @@ export default function EditMapTab({ roadId }) {
     };
 
     const onSave = async () => {
-        if (!roadId || !checkValidSave.current?.()) {
+        if ((!roadId && !detectedRoads) || !checkValidSave.current?.()) {
             toast.error('No Changes made');
             return;
         } else {
             await handleSave();
         }
-
     }
+
     return (
         <div className="flex-1 flex flex-col h-full overflow-y-auto">
             <div className="p-2">
-                <button className="p-2 flex w-full text-white bg-[#1E2E33] rounded-lg">
-                    < DetectIcon />
-                    <label className="mx-auto">Detect Roads</label>
+                <button 
+                    className={`p-2 flex w-full text-white ${tool === 'detect-roads' ? 'bg-[#1e506b]' : 'bg-[#1E2E33]'} rounded-lg`}
+                    onClick={() => setTool(tool === 'detect-roads' ? 'move' : 'detect-roads')}
+                >
+                    <DetectIcon />
+                    <label className="mx-auto">
+                        {tool === 'detect-roads' ? 'Cancel Detection' : 'Detect Roads'}
+                    </label>
                 </button>
+                {detectedRoads && (
+                    <div className="mt-2 flex space-x-2">
+                        <button 
+                            className="p-2 flex-1 text-white bg-red-600 rounded-lg"
+                            onClick={() => setDetectedRoads(null)}
+                        >
+                            Discard
+                        </button>
+                        <button 
+                            className="p-2 flex-1 text-white bg-green-600 rounded-lg"
+                            onClick={onSave}
+                        >
+                            Save
+                        </button>
+                    </div>
+                )}
             </div>
             <div className="px-2 py-1 flex text-black text-sm bg-[#E5E8EB]">
                 Navigation Tools
