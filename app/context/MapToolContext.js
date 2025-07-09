@@ -16,7 +16,7 @@ export function MapToolProvider({ children }) {
     const hideLogRef = useRef(null);
     const [lockedRoads, setLockedRoads] = useState({});
     const beforeSaveRef = useRef(new Map());
-    
+
     // Move these states to context for centralized management
     const [selectedFeatureId, setSelectedFeatureId] = useState(null);
     const [selectedRoadId, setSelectedRoadId] = useState(null);
@@ -37,7 +37,7 @@ export function MapToolProvider({ children }) {
             return copy;
         });
         beforeSaveRef.current.delete(roadid);
-        
+
         // Clear selection if this road was selected
         if (selectedFeatureId === roadid) {
             setSelectedFeatureId(null);
@@ -49,7 +49,7 @@ export function MapToolProvider({ children }) {
 
     const unlockAllMyRoads = () => {
         if (!currentUser) return;
-        
+
         const myRoads = Object.keys(lockedRoads).filter(roadid => lockedRoads[roadid] === currentUser);
         myRoads.forEach(roadid => unlockRoad(roadid));
     };
@@ -57,9 +57,24 @@ export function MapToolProvider({ children }) {
     // Helper function to check if current user owns a road
     const isMyRoad = (roadid) => lockedRoads[roadid] === currentUser;
 
+    // New rollback function to revert road to original state
+    const rollbackRoad = (roadid) => {
+        const originalFeature = beforeSaveRef.current.get(roadid);
+        if (!originalFeature) {
+            console.warn(`No original state found for road ${roadid}`);
+            return;
+        }
+        if (applyFeatureChangeRef.current) {
+            applyFeatureChangeRef.current(originalFeature);
+        }
+        beforeSaveRef.current.delete(roadid);
+    };
+    
+    const applyFeatureChangeRef = useRef(null);
+
     return (
         <MapToolContext.Provider value={{
-            tool, setTool, saveEditRef, checkValidSave, cancelEditRef, hideLogRef, logClickRef, 
+            tool, setTool, saveEditRef, checkValidSave, cancelEditRef, hideLogRef, logClickRef,
             lockedRoads, setLockedRoads, beforeSaveRef,
             selectedFeatureId, setSelectedFeatureId,
             selectedRoadId, setSelectedRoadId,
@@ -67,6 +82,7 @@ export function MapToolProvider({ children }) {
             roadInfo, setRoadInfo,
             currentUser, setCurrentUser,
             lockRoad, unlockRoad, unlockAllMyRoads, isMyRoad,
+            rollbackRoad, applyFeatureChangeRef,
             socket
         }}>
             {children}

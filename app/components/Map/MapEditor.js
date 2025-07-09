@@ -49,7 +49,7 @@ const GeoJSONEditor = ({
     tool, setTool, saveEditRef, checkValidSave, cancelEditRef, logClickRef, hideLogRef, 
     lockedRoads, setLockedRoads, beforeSaveRef, lockRoad, unlockRoad, unlockAllMyRoads, isMyRoad,
     selectedFeatureId, setSelectedFeatureId, selectedRoadId, setSelectedRoadId, 
-    showRoadInfo, setShowRoadInfo, roadInfo, setRoadInfo, currentUser, setCurrentUser,
+    showRoadInfo, setShowRoadInfo, roadInfo, setRoadInfo, currentUser, setCurrentUser, applyFeatureChangeRef,
     socket 
   } = useMapTool();
   
@@ -149,6 +149,7 @@ const GeoJSONEditor = ({
     };
     logClickRef.current = logClick;
     hideLogRef.current = hideLog;
+    applyFeatureChangeRef.current = applyFeatureChange;
   }, [roadGeojson]);
 
   useEffect(() => {

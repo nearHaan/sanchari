@@ -166,6 +166,7 @@ export default function EditMapTab({ roadId }) {
                         <tr>
                             <th className="text-left px-2 py-1">Road ID</th>
                             <th className="text-center px-2 py-1">Change</th>
+                            <th className="text-center px-2 py-1">Rollback</th>
                             <th className="text-center px-2 py-1">Unlock</th>
                         </tr>
                     </thead>
