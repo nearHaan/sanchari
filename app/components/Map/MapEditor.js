@@ -80,7 +80,7 @@ const GeoJSONEditor = ({
     redoStack.current.length = 0; // Clear redo stack when new action is performed
 
     // Optional: Limit stack size to prevent memory issues
-    if (undoStack.current.length > 100) {
+    if (undoStack.current.length > 20) {
       undoStack.current.shift();
     }
   };
@@ -351,6 +351,10 @@ const GeoJSONEditor = ({
         JSON.parse(JSON.stringify(currentFeature))
       );
       redoStack.current.push(redoAction);
+    }
+
+    if(beforeSaveRef.current.has(action.roadId)){
+      if(action.beforeState == beforeSaveRef.current.get(action.roadId)) beforeSaveRef.current.delete(action.roadId);
     }
 
     // Apply the before state
