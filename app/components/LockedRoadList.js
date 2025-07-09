@@ -4,7 +4,7 @@ import { useMapTool } from "../context/MapToolContext";
 import LockedRoadTile from "./LockedRoadTile";
 
 export default function LockedRoadList() {
-  const { lockedRoads, beforeSaveRef, unlockRoad, rollbackRoad } = useMapTool();
+  const { lockedRoads, beforeSaveRef, selectRoad, unlockRoad, rollbackRoad } = useMapTool();
 
   return (
     <tbody>
@@ -15,6 +15,7 @@ export default function LockedRoadList() {
             key={roadid}
             roadid={roadid}
             state={isChanged ? "c" : "nc"}
+            onClick={() => selectRoad(roadid)}
             onRollback={() => rollbackRoad(roadid)}
             onUnlock={() => unlockRoad(roadid)}
             hasChanged={isChanged}

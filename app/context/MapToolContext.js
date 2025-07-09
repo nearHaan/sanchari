@@ -69,7 +69,11 @@ export function MapToolProvider({ children }) {
         }
         beforeSaveRef.current.delete(roadid);
     };
-    
+
+    const selectRoad = (roadid) => {
+        setSelectedFeatureId(roadid);
+    }
+
     const applyFeatureChangeRef = useRef(null);
 
     return (
@@ -82,7 +86,7 @@ export function MapToolProvider({ children }) {
             roadInfo, setRoadInfo,
             currentUser, setCurrentUser,
             lockRoad, unlockRoad, unlockAllMyRoads, isMyRoad,
-            rollbackRoad, applyFeatureChangeRef,
+            selectRoad ,rollbackRoad, applyFeatureChangeRef,
             socket
         }}>
             {children}

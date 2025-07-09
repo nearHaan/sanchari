@@ -1,9 +1,9 @@
 import { LockOpen, UndoIcon } from "./Icons";
 
-export default function LockedRoadTile({ roadid, state, onRollback, onUnlock, hasChanged }) {
+export default function LockedRoadTile({ roadid, state, onRollback, onClick, onUnlock, hasChanged }) {
     return (
         <tr className="odd:bg-[#F6F6F6] even:bg-[#E5E8EB]">
-            <td className="text-left px-2 py-2">{roadid}</td>
+            <td onClick={onClick} className="cursor-pointer hover:text-blue-500 hover:scale-95 text-left px-2 py-2">{roadid}</td>
             <td className="place-items-center px-2 py-2">
                 <div className={`w-2 h-2 rounded-full border-[1px] border-white ${state == 'c' ? "bg-yellow-300" : "bg-green-500"}`}></div>
             </td>
