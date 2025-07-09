@@ -9,11 +9,7 @@ import {
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import { io } from "socket.io-client";
 import { useMapTool } from "@/app/context/MapToolContext";
-
-// WebSocket connection
-const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL);
 
 const createNodeIcon = (tool) => {
   const div = document.createElement('div');
@@ -34,34 +30,40 @@ const createNodeIcon = (tool) => {
 
 const GeoJSONEditor = ({
   user,
-  setSelectedRoadId,
   villageFeature,
+  globalLockedRoads,
   roadGeojson,
   setRoadGeojson,
-  selectedFeatureId,
-  setSelectedFeatureId,
-  lockedRoads,
-  setLockedRoads,
-  setRoadInfo,
-  setShowRoadInfo,
 }) => {
   const map = useMap();
   const layerRef = useRef(null);
   const roadLayersRef = useRef(new Map());
   const updatedGeojson = useRef(new Map());
   const nodeMap = useRef(new Map());
-  
+
   // Single global undo/redo stacks
   const undoStack = useRef([]);
   const redoStack = useRef([]);
+
+  const { 
+    tool, setTool, saveEditRef, checkValidSave, cancelEditRef, logClickRef, hideLogRef, 
+    lockedRoads, setLockedRoads, beforeSaveRef, lockRoad, unlockRoad, unlockAllMyRoads, isMyRoad,
+    selectedFeatureId, setSelectedFeatureId, selectedRoadId, setSelectedRoadId, 
+    showRoadInfo, setShowRoadInfo, roadInfo, setRoadInfo, currentUser, setCurrentUser,
+    socket 
+  } = useMapTool();
   
-  const beforeSave = useRef(new Map());
-  const [selectedIds, setSelectedIds] = useState(new Set());
-  const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef, logClickRef, hideLogRef } = useMapTool();
   const [historicalFeature, setHistoricalFeature] = useState(null);
   const [addAfterNodeIndex, setAddAfterNodeIndex] = useState(null);
   const [nodes, setNodes] = useState([]);
   const hasZoomed = useRef(false);
+
+  // Set current user
+  useEffect(() => {
+    if (user && !currentUser) {
+      setCurrentUser(user);
+    }
+  }, [user, currentUser, setCurrentUser]);
 
   // Helper function to create an action object for the undo/redo stack
   const createAction = (type, roadId, beforeState, afterState) => ({
@@ -76,7 +78,7 @@ const GeoJSONEditor = ({
   const pushToUndoStack = (action) => {
     undoStack.current.push(action);
     redoStack.current.length = 0; // Clear redo stack when new action is performed
-    
+
     // Optional: Limit stack size to prevent memory issues
     if (undoStack.current.length > 100) {
       undoStack.current.shift();
@@ -142,7 +144,7 @@ const GeoJSONEditor = ({
     saveEditRef.current = onSaveChange;
     checkValidSave.current = () => updatedGeojson.current.size > 0;
     cancelEditRef.current = () => {
-      beforeSave.current.forEach(f => applyFeatureChange(f));
+      beforeSaveRef.current.forEach(f => applyFeatureChange(f));
       updatedGeojson.current.clear();
     };
     logClickRef.current = logClick;
@@ -152,16 +154,12 @@ const GeoJSONEditor = ({
   useEffect(() => {
     const esc = (e) => {
       if (e.key === 'Escape' && selectedFeatureId) {
-        selectedIds.forEach(roadid => socket.emit('road-unlock', { roadid }));
-        setSelectedIds(new Set());
-        setSelectedFeatureId(null);
-        setShowRoadInfo(false);
-        setSelectedRoadId(null);
+        unlockAllMyRoads();
       }
     };
     document.addEventListener('keydown', esc);
     return () => document.removeEventListener('keydown', esc);
-  }, [selectedIds, selectedFeatureId, setSelectedFeatureId, setShowRoadInfo, setSelectedRoadId]);
+  }, [selectedFeatureId, unlockAllMyRoads]);
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -221,9 +219,9 @@ const GeoJSONEditor = ({
     if (!node) return;
 
     const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
-    
-    if (!beforeSave.current.has(selectedFeatureId)) {
-      beforeSave.current.set(selectedFeatureId, prevFeature);
+
+    if (!beforeSaveRef.current.has(selectedFeatureId)) {
+      beforeSaveRef.current.set(selectedFeatureId, prevFeature);
     }
 
     const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
@@ -251,9 +249,9 @@ const GeoJSONEditor = ({
     if (!node) return;
 
     const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
-    
-    if (!beforeSave.current.has(selectedFeatureId)) {
-      beforeSave.current.set(selectedFeatureId, prevFeature);
+
+    if (!beforeSaveRef.current.has(selectedFeatureId)) {
+      beforeSaveRef.current.set(selectedFeatureId, prevFeature);
     }
 
     const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
@@ -279,9 +277,9 @@ const GeoJSONEditor = ({
     if (!node) return;
 
     const prevFeature = JSON.parse(JSON.stringify(selectedFeature));
-    
-    if (!beforeSave.current.has(selectedFeatureId)) {
-      beforeSave.current.set(selectedFeatureId, prevFeature);
+
+    if (!beforeSaveRef.current.has(selectedFeatureId)) {
+      beforeSaveRef.current.set(selectedFeatureId, prevFeature);
     }
 
     const updatedFeature = JSON.parse(JSON.stringify(selectedFeature));
@@ -314,8 +312,8 @@ const GeoJSONEditor = ({
     });
     if (!response.ok) throw new Error("Bulk save failed");
     updatedGeojson.current.clear();
-    beforeSave.current.clear();
-    
+    beforeSaveRef.current.clear();
+
     // Clear undo/redo stacks after successful save
     undoStack.current.length = 0;
     redoStack.current.length = 0;
@@ -339,9 +337,9 @@ const GeoJSONEditor = ({
 
   const undo = () => {
     if (undoStack.current.length === 0) return;
-    
+
     const action = undoStack.current.pop();
-    
+
     // Push current state to redo stack
     const currentFeature = roadGeojson.features.find(f => f.properties.roadid === action.roadId);
     if (currentFeature) {
@@ -353,16 +351,16 @@ const GeoJSONEditor = ({
       );
       redoStack.current.push(redoAction);
     }
-    
+
     // Apply the before state
     applyFeatureChange(action.beforeState);
   };
 
   const redo = () => {
     if (redoStack.current.length === 0) return;
-    
+
     const action = redoStack.current.pop();
-    
+
     // Push current state to undo stack
     const currentFeature = roadGeojson.features.find(f => f.properties.roadid === action.roadId);
     if (currentFeature) {
@@ -374,7 +372,7 @@ const GeoJSONEditor = ({
       );
       undoStack.current.push(undoAction);
     }
-    
+
     // Apply the after state
     applyFeatureChange(action.afterState);
   };
@@ -414,9 +412,11 @@ const GeoJSONEditor = ({
       L.geoJSON(roadGeojson, {
         style: (feature) => {
           const roadid = feature.properties.roadid;
-          const isLocked = lockedRoads[roadid];
+          const isLocked = globalLockedRoads[roadid];
+          const isMyLock = isMyRoad(roadid);
+          
           return {
-            color: selectedIds.has(roadid) ? 'green' : isLocked ? '#aaa' : 'red',
+            color: isMyLock ? 'green' : isLocked ? '#aaa' : 'red',
             weight: 6,
             opacity: 0.7,
           };
@@ -427,10 +427,10 @@ const GeoJSONEditor = ({
 
           layer.on('click', () => {
             if (tool !== 'select') return;
-            if (lockedRoads[roadid]) return;
-            if (!selectedIds.has(roadid)) {
-              socket.emit('road-lock', { roadid, username: user });
-              setSelectedIds(prev => new Set(prev).add(roadid));
+            if (globalLockedRoads[roadid] && globalLockedRoads[roadid] !== user) return;
+            
+            if (!isMyRoad(roadid)) {
+              lockRoad(roadid, user);
             }
             setSelectedFeatureId(roadid);
             setSelectedRoadId(roadid);
@@ -438,8 +438,8 @@ const GeoJSONEditor = ({
             setShowRoadInfo(true);
           });
 
-          if (lockedRoads[roadid]) {
-            layer.bindTooltip(`Locked by ${lockedRoads[roadid]}`, { permanent: false, direction: 'top' });
+          if (globalLockedRoads[roadid] && globalLockedRoads[roadid] !== user) {
+            layer.bindTooltip(`Locked by ${globalLockedRoads[roadid]}`, { permanent: false, direction: 'top' });
           }
 
           layerGroup.addLayer(layer);
@@ -467,19 +467,19 @@ const GeoJSONEditor = ({
         hasZoomed.current = true;
       }
     }
-  }, [villageFeature, roadGeojson, selectedFeatureId, lockedRoads, tool, selectedIds, historicalFeature]);
+  }, [villageFeature, roadGeojson, selectedFeatureId, globalLockedRoads, lockedRoads, tool, historicalFeature, isMyRoad, user]);
 
   useEffect(() => {
     const handleUnload = () => {
       if (selectedFeatureId) {
-        socket.emit('road-unlock', { roadid: selectedFeatureId });
+        unlockRoad(selectedFeatureId);
       }
     };
     window.addEventListener('beforeunload', handleUnload);
     return () => {
       window.removeEventListener('beforeunload', handleUnload);
     };
-  }, [selectedFeatureId]);
+  }, [selectedFeatureId, unlockRoad]);
 
   return (
     <>
@@ -510,17 +510,14 @@ const GeoJSONEditor = ({
 
 export default function MapEditor({
   user,
-  setSelectedRoadId,
   villageFeature,
   roadGeojson,
   setRoadGeojson,
-  setRoadInfo,
-  setShowRoadInfo,
 }) {
   const defaultPosition = [10.8505, 76.2711];
   const mapRef = useRef(null);
-  const [selectedFeatureId, setSelectedFeatureId] = useState(null);
-  const [lockedRoads, setLockedRoads] = useState({});
+  const { setLockedRoads, socket } = useMapTool();
+  const [globalLockedRoads, setGlobalLockedRoads] = useState({});
 
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
@@ -542,11 +539,11 @@ export default function MapEditor({
     });
 
     socket.on("road-locked", ({ roadid, username }) => {
-      setLockedRoads((prev) => ({ ...prev, [roadid]: username }));
+      setGlobalLockedRoads((prev) => ({ ...prev, [roadid]: username }));
     });
 
     socket.on("road-unlocked", ({ roadid }) => {
-      setLockedRoads((prev) => {
+      setGlobalLockedRoads((prev) => {
         const copy = { ...prev };
         delete copy[roadid];
         return copy;
@@ -554,7 +551,7 @@ export default function MapEditor({
     });
 
     socket.on("initial-locks", (locks) => {
-      setLockedRoads(locks);
+      setGlobalLockedRoads(locks);
     });
 
     return () => {
@@ -583,16 +580,10 @@ export default function MapEditor({
         {(villageFeature || roadGeojson) && (
           <GeoJSONEditor
             user={user}
-            setSelectedRoadId={setSelectedRoadId}
             villageFeature={villageFeature}
+            globalLockedRoads={globalLockedRoads}
             roadGeojson={roadGeojson}
             setRoadGeojson={setRoadGeojson}
-            selectedFeatureId={selectedFeatureId}
-            setSelectedFeatureId={setSelectedFeatureId}
-            lockedRoads={lockedRoads}
-            setLockedRoads={setLockedRoads}
-            setRoadInfo={setRoadInfo}
-            setShowRoadInfo={setShowRoadInfo}
           />
         )}
       </MapContainer>

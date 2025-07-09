@@ -5,6 +5,8 @@ import EditMapBtn from "./EditMapBtn";
 import toast from "react-hot-toast";
 import { useMapTool } from "../context/MapToolContext";
 import { confirmWithInput } from "./confirmWithInputPromise";
+import LockedRoadTile from "./LockedRoadTile";
+import LockedRoadList from "./LockedRoadList";
 
 export default function EditMapTab({ roadId }) {
 
@@ -154,6 +156,21 @@ export default function EditMapTab({ roadId }) {
                     < ShootIcon />
                     <label className="ml-2 mr-auto">Remove</label>
                 </button>
+            </div>
+            <div className="px-2 py-1 flex text-black text-sm bg-[#E5E8EB]">
+                Locked Roads
+            </div>
+            <div className="m-2 rounded-md clip-border overflow-x-auto">
+                <table className="w-full table-auto text-xs text-black content-start">
+                    <thead className="bg-[#E5E8EB]">
+                        <tr>
+                            <th className="text-left px-2 py-1">Road ID</th>
+                            <th className="text-center px-2 py-1">Change</th>
+                            <th className="text-center px-2 py-1">State</th>
+                        </tr>
+                    </thead>
+                    < LockedRoadList/>
+                </table>
             </div>
             <div className="sticky bottom-0 mt-auto h-fit p-3 flex items-center justify-center bg-white shadow-[0_0_30px_0_rgba(0,0,0,0.1)] rounded-t-2xl">
                 <button onClick={handleDiscard} className="mr-2 p-2 flex w-full text-black bg-[#E5E8EB] rounded-lg cursor-pointer">
