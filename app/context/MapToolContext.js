@@ -38,7 +38,6 @@ export function MapToolProvider({ children }) {
         });
         beforeSaveRef.current.delete(roadid);
 
-        // Clear selection if this road was selected
         if (selectedFeatureId === roadid) {
             setSelectedFeatureId(null);
             setSelectedRoadId(null);
@@ -70,8 +69,14 @@ export function MapToolProvider({ children }) {
         beforeSaveRef.current.delete(roadid);
     };
 
-    const selectRoad = (roadid) => {
+    const selectRoad = async (roadid) => {
+        if (roadid) {
+            await fetch(`api/roads/${roadid}/info/`)
+                .then(res => res.json())
+                .then(res => setRoadInfo(res));
+        }
         setSelectedFeatureId(roadid);
+        setShowRoadInfo(true);
     }
 
     const applyFeatureChangeRef = useRef(null);
@@ -86,7 +91,7 @@ export function MapToolProvider({ children }) {
             roadInfo, setRoadInfo,
             currentUser, setCurrentUser,
             lockRoad, unlockRoad, unlockAllMyRoads, isMyRoad,
-            selectRoad ,rollbackRoad, applyFeatureChangeRef,
+            selectRoad, rollbackRoad, applyFeatureChangeRef,
             socket
         }}>
             {children}

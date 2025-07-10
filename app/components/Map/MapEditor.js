@@ -47,9 +47,8 @@ const GeoJSONEditor = ({
 
   const { 
     tool, setTool, saveEditRef, checkValidSave, cancelEditRef, logClickRef, hideLogRef, 
-    lockedRoads, setLockedRoads, beforeSaveRef, lockRoad, unlockRoad, unlockAllMyRoads, isMyRoad,
-    selectedFeatureId, setSelectedFeatureId, selectedRoadId, setSelectedRoadId, 
-    showRoadInfo, setShowRoadInfo, roadInfo, setRoadInfo, currentUser, setCurrentUser, applyFeatureChangeRef,
+    lockedRoads, setLockedRoads, beforeSaveRef, lockRoad, unlockRoad, unlockAllMyRoads, isMyRoad, selectRoad,
+    selectedFeatureId, currentUser, setCurrentUser, applyFeatureChangeRef,
     socket 
   } = useMapTool();
   
@@ -437,10 +436,7 @@ const GeoJSONEditor = ({
             if (!isMyRoad(roadid)) {
               lockRoad(roadid, user);
             }
-            setSelectedFeatureId(roadid);
-            setSelectedRoadId(roadid);
-            fetch(`/api/roads/${roadid}/info/`).then(res => res.json()).then(setRoadInfo);
-            setShowRoadInfo(true);
+            selectRoad(roadid);
           });
 
           if (globalLockedRoads[roadid] && globalLockedRoads[roadid] !== user) {

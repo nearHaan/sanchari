@@ -5,12 +5,11 @@ import EditMapBtn from "./EditMapBtn";
 import toast from "react-hot-toast";
 import { useMapTool } from "../context/MapToolContext";
 import { confirmWithInput } from "./confirmWithInputPromise";
-import LockedRoadTile from "./LockedRoadTile";
 import LockedRoadList from "./LockedRoadList";
 
-export default function EditMapTab({ roadId }) {
+export default function EditMapTab({}) {
 
-    const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef } = useMapTool();
+    const { tool, setTool, saveEditRef, checkValidSave, cancelEditRef, selectedFeatureId } = useMapTool();
 
     const handleSave = async () => {
         const msg = await confirmWithInput();
@@ -27,7 +26,7 @@ export default function EditMapTab({ roadId }) {
     };
 
     const onSave = async () => {
-        if (!roadId || !checkValidSave.current?.()) {
+        if (!selectedFeatureId || !checkValidSave.current?.()) {
             toast.error('No Changes made');
             return;
         } else {
