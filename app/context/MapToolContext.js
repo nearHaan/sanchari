@@ -16,6 +16,8 @@ export function MapToolProvider({ children }) {
     const hideLogRef = useRef(null);
     const [lockedRoads, setLockedRoads] = useState({});
     const beforeSaveRef = useRef(new Map());
+    const [detectedRoads, setDetectedRoads] = useState(null);
+    const [isDetecting, setIsDetecting] = useState(false);
 
     // Move these states to context for centralized management
     const [selectedFeatureId, setSelectedFeatureId] = useState(null);
@@ -92,6 +94,8 @@ export function MapToolProvider({ children }) {
             currentUser, setCurrentUser,
             lockRoad, unlockRoad, unlockAllMyRoads, isMyRoad,
             selectRoad, rollbackRoad, applyFeatureChangeRef,
+            detectedRoads, setDetectedRoads,
+            isDetecting, setIsDetecting,
             socket
         }}>
             {children}
